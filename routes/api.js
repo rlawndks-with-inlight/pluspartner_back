@@ -194,7 +194,6 @@ const getUsers = (req, res) => {
         }
 
         sql = sql + whereStr + " ORDER BY pk DESC ";
-        console.log(sql)
         if (req.query.page) {
             sql += ` LIMIT ${(req.query.page - 1) * 10}, 10`;
             db.query(pageSql, async (err, result1) => {
@@ -247,6 +246,51 @@ const getUserStatistics = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const addMaster = (req, res) => {
+    try {
+        console.log(req.file);
+        const id = req.body.id ?? "";
+        const pw = req.body.pw ?? "";
+        const name = req.body.name ?? "";
+        const user_level = req.body.user_level ?? 30;
+        const image = '/image/'+req.file.fieldname+'/'+req.file.filename;
+        console.log(req.body)
+        //중복 체크 
+        let sql = "SELECT * FROM user_table WHERE id=?"
+
+        db.query(sql, [id], (err, result) => {
+            if (result.length > 0)
+                response(req, res, -200, "ID가 중복됩니다.", [])
+            else {
+                crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+                    // bcrypt.hash(pw, salt, async (err, hash) => {
+                    let hash = decoded.toString('base64')
+
+                    if (err) {
+                        console.log(err)
+                        response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
+                    }
+
+                    sql = 'INSERT INTO user_table (id, pw, name, user_level, profile_img) VALUES (?, ?, ?, ?, ?)'
+                    await db.query(sql, [id, hash, name, user_level, image], (err, result) => {
+
+                        if (err) {
+                            console.log(err)
+                            response(req, res, -200, "회원 추가 실패", [])
+                        }
+                        else {
+                            response(req, res, 200, "회원 추가 성공", [])
+                        }
+                    })
+                })
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 module.exports = {
-    onSignUp, onLoginById, getUserToken, onLogout, getUsers
+    onSignUp, onLoginById, getUserToken, onLogout, getUsers, addMaster
 };
