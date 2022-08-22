@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
         let typeArray = file.mimetype.split('/')
         let filetype = typeArray[1]
-        if (filetype == 'jpg' || filetype == 'png' || filetype == 'gif' || filetype == 'jpeg' || filetype == 'bmp' || filetype == 'mp4' || filetype == 'avi' || filetype == 'webp')
+        if (filetype == 'jpg' || filetype == 'png' || filetype == 'gif' || filetype == 'jpeg' || filetype == 'bmp' || filetype == 'mp4' || filetype == 'avi' || filetype == 'webp' || filetype == 'ico')
                 return cb(null, true)
 
         console.log((file.fieldname === 'image') ? '광고 ' : '상품 ' + '파일 확장자 제한: ', filetype)
@@ -23,7 +23,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
         storage: storage,
         fileFilter: fileFilter,
-        limit: { fileSize: 100 * 1024 * 1024 }
-})
+        limit: { fileSize:  100 * 1024 * 1024 }
+});
 
 module.exports = { upload }

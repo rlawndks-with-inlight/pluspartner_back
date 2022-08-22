@@ -15,7 +15,8 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const { checkLevel, logRequestResponse, isNotNullOrUndefined, namingImagesPath, nullResponse, lowLevelResponse, response } = require('./util')
 
-
+app.use(bodyParser.json({limit:'100mb'})); 
+app.use(bodyParser.urlencoded({extended:true, limit:'100mb'})); 
 //multer
 const {upload} = require('./config/multerConfig')
 
@@ -26,6 +27,7 @@ app.use(cookieParser());
 // app.use(passport.initialize());
 // app.use(passport.session());
 // passportConfig(passport);
+
 
 const path = require('path');
 app.set('/routes', __dirname + '/routes');

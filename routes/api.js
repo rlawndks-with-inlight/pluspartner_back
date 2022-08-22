@@ -292,12 +292,40 @@ const addMaster = (req, res) => {
 }
 const getHomeContent = (req, res) => {
     try {
-        db.query('SELECT * FROM oneword_table ORDER BY pk DESC LIMIT 1', (err, result1) => {
+        db.query('SELECT pk, title, hash FROM oneword_table ORDER BY pk DESC LIMIT 1', async (err, result1) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                return response(req, res, 100, "success", { oneWord: result1[0] })
+                await db.query('SELECT pk, title, hash FROM oneevent_table ORDER BY pk DESC LIMIT 1', async (err, result2) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "서버 에러 발생", [])
+                    } else {
+                        await db.query('SELECT pk, title, hash, main_img, date FROM issue_table ORDER BY pk DESC LIMIT 1', async (err, result3) => {
+                            if (err) {
+                                console.log(err)
+                                return response(req, res, -200, "서버 에러 발생", [])
+                            } else {
+                                await db.query('SELECT pk, title, hash, main_img, date FROM theme_table ORDER BY pk DESC LIMIT 2', async (err, result4) => {
+                                    if (err) {
+                                        console.log(err)
+                                        return response(req, res, -200, "서버 에러 발생", [])
+                                    } else {
+                                        await db.query('SELECT pk, title, link FROM video_table ORDER BY pk DESC LIMIT 1', async (err, result5) => {
+                                            if (err) {
+                                                console.log(err)
+                                                return response(req, res, -200, "서버 에러 발생", [])
+                                            } else {
+                                                return response(req, res, 100, "success", { oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, videos: result5 })
+                                            }
+                                        })
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
             }
         })
     } catch (err) {
@@ -481,6 +509,55 @@ const getItem = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const addVideo = (req, res) => {
+    try {
+        const { user_pk, title, link, note } = req.body;
+        db.query("INSERT INTO video_table (user_pk, title, link, note) VALUES (?, ?, ?, ?)", [user_pk, title, link, note], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateVideo = (req, res) => {
+    try {
+        console.log(req.body)
+        const { user_pk, title, link, note, pk } = req.body;
+        db.query("UPDATE video_table SET  title=?, link=?, note=? WHERE pk=?", [title, link, note, pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addNoteImage = (req, res) => {
+    try {
+        console.log(req.file)
+        if (req.file) {
+            return response(req, res, 100, "success", { filename: `/image/note/${req.file.filename}` })
+        } else {
+            return response(req, res, -100, "이미지가 비어 있습니다.", [])
+        }
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const getOneWord = (req, res) => {
     try {
         db.query("SELECT * FROM oneword_table ORDER BY pk DESC LIMIT 1", (err, result) => {
@@ -579,7 +656,7 @@ const deleteItem = (req, res) => {
 module.exports = {
     onLoginById, getUserToken, onLogout,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory,//insert 
-    updateUser, updateItem, updateIssueCategory,//update
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, //insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, //update
     deleteItem
 };
