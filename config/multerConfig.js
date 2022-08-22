@@ -2,7 +2,7 @@ const multer = require('multer');
 
 const storage = multer.diskStorage({
         destination: function (req, file, cb) {
-                //console.log(file)
+                console.log(file)
                 cb(null, __dirname + `/../image/${file.fieldname}/`);
         },
         filename: function (req, file, cb) {
@@ -13,8 +13,7 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
         let typeArray = file.mimetype.split('/')
         let filetype = typeArray[1]
-
-        if (filetype == 'jpg' || filetype == 'png' || filetype == 'gif' || filetype == 'jpeg' || filetype == 'bmp' || filetype == 'mp4' || filetype == 'avi')
+        if (filetype == 'jpg' || filetype == 'png' || filetype == 'gif' || filetype == 'jpeg' || filetype == 'bmp' || filetype == 'mp4' || filetype == 'avi' || filetype == 'webp')
                 return cb(null, true)
 
         console.log((file.fieldname === 'image') ? '광고 ' : '상품 ' + '파일 확장자 제한: ', filetype)

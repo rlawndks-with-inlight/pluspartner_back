@@ -108,5 +108,5 @@ app.post('/api/addimage', upload.single('image'), (req, res) =>{
         response(req, res, -200, "서버 에러 발생", [])
         }
 })
-http.createServer(app).listen(HTTP_PORT); 
+http.createServer(app).listen(HTTP_PORT,console.log("Server on "+HTTP_PORT)); 
 //https.createServer(options, app).listen(HTTPS_PORT);

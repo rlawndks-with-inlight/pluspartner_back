@@ -188,8 +188,8 @@ function response(req, res, code, message, data) {
         'message': message,
         'data': data,
     }
-    logRequestResponse(req, resDict)
-    res.send(resDict)
+    //logRequestResponse(req, resDict)
+    res.send(resDict);
 }
 function nullResponse(req, res) {
     response(req, res, -200, "입력이 잘못되었습니다.(요청 데이터 확인)", [])

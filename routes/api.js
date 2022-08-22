@@ -253,8 +253,7 @@ const addMaster = (req, res) => {
         const pw = req.body.pw ?? "";
         const name = req.body.name ?? "";
         const user_level = req.body.user_level ?? 30;
-        const image = '/image/'+req.file.fieldname+'/'+req.file.filename;
-        console.log(req.body)
+        const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
         //중복 체크 
         let sql = "SELECT * FROM user_table WHERE id=?"
 
@@ -291,6 +290,296 @@ const addMaster = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const getHomeContent = (req, res) => {
+    try {
+        db.query('SELECT * FROM oneword_table ORDER BY pk DESC LIMIT 1', (err, result1) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", { oneWord: result1[0] })
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addOneWord = (req, res) => {
+    try {
+        const { title, hash, suggest_title, note, user_pk } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk];
+        let columns = "(title, hash, suggest_title, note, user_pk";
+        let values = "(?, ?, ?, ?, ?";
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        } else {
+            image = req.body.url ?? "";
+        }
+        zColumn.push(image);
+        columns += ', main_img)'
+        values += ',?)'
+        db.query(`INSERT INTO oneword_table ${columns} VALUES ${values}`, zColumn, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addOneEvent = (req, res) => {
+    try {
+        const { title, hash, suggest_title, note, user_pk } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk];
+        let columns = "(title, hash, suggest_title, note, user_pk";
+        let values = "(?, ?, ?, ?, ?";
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        } else {
+            image = req.body.url ?? "";
+        }
+        zColumn.push(image);
+        columns += ', main_img)'
+        values += ',?)'
+        db.query(`INSERT INTO oneevent_table ${columns} VALUES ${values}`, zColumn, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addItem = (req, res) => {
+    try {
+        const { title, hash, suggest_title, note, user_pk, table, category } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk];
+        let columns = "(title, hash, suggest_title, note, user_pk";
+        let values = "(?, ?, ?, ?, ?";
+        if (category) {
+            zColumn.push(category);
+            columns += ', category_pk '
+            values += ' ,? '
+        }
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        } else {
+            image = req.body.url ?? "";
+        }
+        zColumn.push(image);
+        columns += ', main_img)'
+        values += ',?)'
+        db.query(`INSERT INTO ${table}_table ${columns} VALUES ${values}`, zColumn, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addIssueCategory = (req, res) => {
+    try {
+        const { title } = req.body;
+        db.query("INSERT INTO issue_category_table (title) VALUES (?)", [title], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateIssueCategory = (req, res) => {
+    try {
+        const { title, pk } = req.body;
+        db.query("UPDATE issue_category_table SET title=? WHERE pk=?", [title, pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateItem = (req, res) => {
+    try {
+        const { title, hash, suggest_title, note, user_pk, table, category, pk } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk];
+        let columns = " title=?, hash=?, suggest_title=?, note=?, user_pk=? ";
+        if (category) {
+            zColumn.push(category);
+            columns += ', category_pk=? '
+        }
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        } else {
+            image = req.body.url ?? "";
+        }
+        zColumn.push(image);
+        columns += ', main_img=? '
+        zColumn.push(pk)
+        db.query(`UPDATE ${table}_table SET ${columns} WHERE pk=? `, zColumn, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const getItem = (req, res) => {
+    try {
+        let table = req.query.table ?? "user";
+        let pk = req.query.pk ?? 0;
+        let whereStr = " WHERE pk=? ";
+        if (table == "setting") {
+            whereStr = "";
+        }
+        let sql = `SELECT * FROM ${table}_table ` + whereStr;
+        db.query(sql, [pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", result[0])
+            }
+        })
+
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const getOneWord = (req, res) => {
+    try {
+        db.query("SELECT * FROM oneword_table ORDER BY pk DESC LIMIT 1", (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", result[0])
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const getOneEvent = (req, res) => {
+    try {
+        db.query("SELECT * FROM oneevent_table ORDER BY pk DESC LIMIT 1", (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", result[0])
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const getItems = (req, res) => {
+    try {
+        let table = req.query.table ?? "user";
+        let sql = `SELECT * FROM ${table}_table `;
+        let pageSql = `SELECT COUNT(*) FROM ${table}_table `;
+
+        let whereStr = " WHERE 1=1 ";
+        if (req.query.level) {
+            whereStr += ` AND user_level=${req.query.level} `;
+        }
+
+        sql = sql + whereStr + " ORDER BY pk DESC ";
+        if (req.query.page) {
+            sql += ` LIMIT ${(req.query.page - 1) * 10}, 10`;
+            db.query(pageSql, async (err, result1) => {
+                if (err) {
+                    console.log(err)
+                    return response(req, res, -200, "서버 에러 발생", [])
+                } else {
+                    await db.query(sql, (err, result2) => {
+                        if (err) {
+                            console.log(err)
+                            return response(req, res, -200, "서버 에러 발생", [])
+                        } else {
+                            let maxPage = result1[0]['COUNT(*)'] % 10 == 0 ? (result1[0]['COUNT(*)'] / 10) : ((result1[0]['COUNT(*)'] - result1[0]['COUNT(*)'] % 10) / 10 + 1);
+                            return response(req, res, 100, "success", { data: result2, maxPage: maxPage });
+                        }
+                    })
+                }
+            })
+        } else {
+            db.query(sql, (err, result) => {
+                if (err) {
+                    console.log(err)
+                    return response(req, res, -200, "서버 에러 발생", [])
+                } else {
+                    return response(req, res, 100, "success", result)
+                }
+            })
+        }
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const deleteItem = (req, res) => {
+    try {
+        let pk = req.body.pk ?? 0;
+        let table = req.body.table ?? "";
+        let sql = `DELETE FROM ${table}_table WHERE pk=? `
+        db.query(sql, [pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 module.exports = {
-    onSignUp, onLoginById, getUserToken, onLogout, getUsers, addMaster
+    onLoginById, getUserToken, onLogout,//auth
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent,//select
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory,//insert 
+    updateUser, updateItem, updateIssueCategory,//update
+    deleteItem
 };
