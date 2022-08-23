@@ -598,7 +598,9 @@ const getItems = (req, res) => {
         if (req.query.level) {
             whereStr += ` AND user_level=${req.query.level} `;
         }
-
+        if (req.query.category_pk) {
+            whereStr += ` AND category_pk=${req.query.category_pk} `;
+        }
         sql = sql + whereStr + " ORDER BY pk DESC ";
         if (req.query.page) {
             sql += ` LIMIT ${(req.query.page - 1) * 10}, 10`;
