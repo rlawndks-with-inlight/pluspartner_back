@@ -248,10 +248,10 @@ const getUserStatistics = (req, res) => {
 }
 const addMaster = (req, res) => {
     try {
-        console.log(req.file);
         const id = req.body.id ?? "";
         const pw = req.body.pw ?? "";
         const name = req.body.name ?? "";
+        const nickname = req.body.nickname ?? "";
         const user_level = req.body.user_level ?? 30;
         const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
         //중복 체크 
@@ -270,8 +270,8 @@ const addMaster = (req, res) => {
                         response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
                     }
 
-                    sql = 'INSERT INTO user_table (id, pw, name, user_level, profile_img) VALUES (?, ?, ?, ?, ?)'
-                    await db.query(sql, [id, hash, name, user_level, image], (err, result) => {
+                    sql = 'INSERT INTO user_table (id, pw, name, nickname, user_level, profile_img) VALUES (?, ?, ?, ?, ?, ?)'
+                    await db.query(sql, [id, hash, name, nickname, user_level, image], (err, result) => {
 
                         if (err) {
                             console.log(err)
@@ -290,34 +290,93 @@ const addMaster = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getHomeContent = (req, res) => {
+const updateMaster = (req, res) => {
     try {
-        db.query('SELECT pk, title, hash FROM oneword_table ORDER BY pk DESC LIMIT 1', async (err, result1) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "서버 에러 발생", [])
-            } else {
-                await db.query('SELECT pk, title, hash FROM oneevent_table ORDER BY pk DESC LIMIT 1', async (err, result2) => {
+        const id = req.body.id ?? "";
+        let pw = req.body.pw ?? "";
+        const name = req.body.name ?? "";
+        const nickname = req.body.nickname ?? "";
+        const pk = req.body.pk;
+        let image = "";
+        let sql = "SELECT * FROM user_table WHERE id=? AND pk!=?"
+        db.query(sql, [id, pk], async (err, result) => {
+            if (result.length > 0)
+                response(req, res, -200, "ID가 중복됩니다.", [])
+            else {
+                let columns = " id=?, name=?, nickname=? ";
+                let zColumn = [id, name, nickname];
+                await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+                    // bcrypt.hash(pw, salt, async (err, hash) => {
+                    let hash = decoded.toString('base64')
                     if (err) {
                         console.log(err)
-                        return response(req, res, -200, "서버 에러 발생", [])
+                        response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
                     } else {
-                        await db.query('SELECT pk, title, hash, main_img, date FROM issue_table ORDER BY pk DESC LIMIT 1', async (err, result3) => {
+                        if (pw) {
+                            columns += ", pw =?"
+                            zColumn.push(hash);
+                        }
+                        if (req.file) {
+                            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+                            columns += ", profile_img=?"
+                            zColumn.push(image);
+                        }
+                        zColumn.push(pk)
+                        await db.query(`UPDATE user_table SET ${columns} WHERE pk=?`, zColumn, (err, result) => {
                             if (err) {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
                             } else {
-                                await db.query('SELECT pk, title, hash, main_img, date FROM theme_table ORDER BY pk DESC LIMIT 2', async (err, result4) => {
+                                return response(req, res, 100, "success", [])
+                            }
+                        })
+                    }
+                })
+
+            }
+        })
+
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const getHomeContent = (req, res) => {
+    try {
+        db.query('SELECT * FROM user_table WHERE user_level=30 ORDER BY pk DESC', async (err, result0) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                await db.query('SELECT pk, title, hash FROM oneword_table ORDER BY pk DESC LIMIT 1', async (err, result1) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "서버 에러 발생", [])
+                    } else {
+                        await db.query('SELECT pk, title, hash FROM oneevent_table ORDER BY pk DESC LIMIT 1', async (err, result2) => {
+                            if (err) {
+                                console.log(err)
+                                return response(req, res, -200, "서버 에러 발생", [])
+                            } else {
+                                await db.query('SELECT pk, title, hash, main_img, date FROM issue_table ORDER BY pk DESC LIMIT 1', async (err, result3) => {
                                     if (err) {
                                         console.log(err)
                                         return response(req, res, -200, "서버 에러 발생", [])
                                     } else {
-                                        await db.query('SELECT pk, title, link FROM video_table ORDER BY pk DESC LIMIT 1', async (err, result5) => {
+                                        await db.query('SELECT pk, title, hash, main_img, date FROM theme_table ORDER BY pk DESC LIMIT 2', async (err, result4) => {
                                             if (err) {
                                                 console.log(err)
                                                 return response(req, res, -200, "서버 에러 발생", [])
                                             } else {
-                                                return response(req, res, 100, "success", { oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, videos: result5 })
+                                                await db.query('SELECT pk, title, link FROM video_table ORDER BY pk DESC LIMIT 1', async (err, result5) => {
+                                                    if (err) {
+                                                        console.log(err)
+                                                        return response(req, res, -200, "서버 에러 발생", [])
+                                                    } else {
+                                                        return response(req, res, 100, "success", { masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, videos: result5 })
+                                                    }
+                                                })
                                             }
                                         })
                                     }
@@ -328,6 +387,7 @@ const getHomeContent = (req, res) => {
                 })
             }
         })
+
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -493,7 +553,12 @@ const getItem = (req, res) => {
         if (table == "setting") {
             whereStr = "";
         }
+
         let sql = `SELECT * FROM ${table}_table ` + whereStr;
+
+        if (table != "user" && table != "issue_category") {
+            sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
+        }
         db.query(sql, [pk], (err, result) => {
             if (err) {
                 console.log(err)
@@ -659,6 +724,6 @@ module.exports = {
     onLoginById, getUserToken, onLogout,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, //update
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, //update
     deleteItem
 };

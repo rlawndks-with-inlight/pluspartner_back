@@ -5,12 +5,13 @@ const {
     onLoginById, getUserToken, onLogout,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, //update
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, //update
     deleteItem
 } = require('./api')
 
 router.post('/adduser', onSignUp);
 router.post('/addmaster', upload.single('master'), addMaster);
+router.post('/updatemaster', upload.single('master'), updateMaster);
 router.post('/loginbyid', onLoginById);
 router.post('/logout', onLogout);
 router.get('/auth', getUserToken);
