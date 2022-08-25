@@ -49,7 +49,6 @@ const onSignUp = async (req, res) => {
         const nickname = req.body.nickname ?? "";
         const phone = req.body.phone ?? "";
         const user_level = req.body.user_level ?? 0;
-        console.log(req.body)
         //중복 체크 
         let sql = "SELECT * FROM user_table WHERE id=?"
 
@@ -359,7 +358,7 @@ const getHomeContent = (req, res) => {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
                             } else {
-                                await db.query('SELECT pk, title, hash, main_img, date FROM issue_table ORDER BY pk DESC LIMIT 1', async (err, result3) => {
+                                await db.query('SELECT pk, title, hash, main_img, date FROM issue_table ORDER BY pk DESC LIMIT 2', async (err, result3) => {
                                     if (err) {
                                         console.log(err)
                                         return response(req, res, -200, "서버 에러 발생", [])
@@ -369,12 +368,19 @@ const getHomeContent = (req, res) => {
                                                 console.log(err)
                                                 return response(req, res, -200, "서버 에러 발생", [])
                                             } else {
-                                                await db.query('SELECT pk, title, link FROM video_table ORDER BY pk DESC LIMIT 1', async (err, result5) => {
+                                                await db.query('SELECT pk, title, link FROM video_table ORDER BY pk DESC LIMIT 2', async (err, result5) => {
                                                     if (err) {
                                                         console.log(err)
                                                         return response(req, res, -200, "서버 에러 발생", [])
                                                     } else {
-                                                        return response(req, res, 100, "success", { masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, videos: result5 })
+                                                        await db.query('SELECT pk, title, hash, main_img, date FROM strategy_table ORDER BY pk DESC LIMIT 3', async (err, result6) => {
+                                                            if (err) {
+                                                                console.log(err)
+                                                                return response(req, res, -200, "서버 에러 발생", [])
+                                                            } else {
+                                                                return response(req, res, 100, "success", { masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, videos: result5, strategies:result6 })
+                                                            }
+                                                        })
                                                     }
                                                 })
                                             }
@@ -593,7 +599,6 @@ const addVideo = (req, res) => {
 }
 const updateVideo = (req, res) => {
     try {
-        console.log(req.body)
         const { user_pk, title, link, note, pk } = req.body;
         db.query("UPDATE video_table SET  title=?, link=?, note=? WHERE pk=?", [title, link, note, pk], (err, result) => {
             if (err) {
@@ -611,7 +616,6 @@ const updateVideo = (req, res) => {
 }
 const addNoteImage = (req, res) => {
     try {
-        console.log(req.file)
         if (req.file) {
             return response(req, res, 100, "success", { filename: `/image/note/${req.file.filename}` })
         } else {
@@ -669,7 +673,11 @@ const getItems = (req, res) => {
         if (req.query.user_pk) {
             whereStr += ` AND user_pk=${req.query.user_pk} `;
         }
+        
         sql = sql + whereStr + " ORDER BY pk DESC ";
+        if(req.query.limit&&!req.query.page){
+            sql += ` LIMIT ${req.query.limit} `;
+        }
         if (req.query.page) {
             sql += ` LIMIT ${(req.query.page - 1) * 10}, 10`;
             db.query(pageSql, async (err, result1) => {
