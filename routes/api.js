@@ -343,42 +343,49 @@ const updateMaster = (req, res) => {
 }
 const getHomeContent = (req, res) => {
     try {
-        db.query('SELECT * FROM user_table WHERE user_level=30 ORDER BY pk DESC', async (err, result0) => {
+        db.query('SELECT * FROM setting_table ORDER BY pk DESC LIMIT 1', async (err, result_1) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                await db.query('SELECT pk, title, hash FROM oneword_table ORDER BY pk DESC LIMIT 1', async (err, result1) => {
+                await db.query('SELECT * FROM user_table WHERE user_level=30 ORDER BY pk DESC', async (err, result0) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        await db.query('SELECT pk, title, hash FROM oneevent_table ORDER BY pk DESC LIMIT 1', async (err, result2) => {
+                        await db.query('SELECT pk, title, hash FROM oneword_table ORDER BY pk DESC LIMIT 1', async (err, result1) => {
                             if (err) {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
                             } else {
-                                await db.query('SELECT pk, title, hash, main_img, date FROM issue_table ORDER BY pk DESC LIMIT 2', async (err, result3) => {
+                                await db.query('SELECT pk, title, hash FROM oneevent_table ORDER BY pk DESC LIMIT 1', async (err, result2) => {
                                     if (err) {
                                         console.log(err)
                                         return response(req, res, -200, "서버 에러 발생", [])
                                     } else {
-                                        await db.query('SELECT pk, title, hash, main_img, date FROM theme_table ORDER BY pk DESC LIMIT 2', async (err, result4) => {
+                                        await db.query('SELECT pk, title, hash, main_img, date FROM issue_table ORDER BY pk DESC LIMIT 5', async (err, result3) => {
                                             if (err) {
                                                 console.log(err)
                                                 return response(req, res, -200, "서버 에러 발생", [])
                                             } else {
-                                                await db.query('SELECT pk, title, link FROM video_table ORDER BY pk DESC LIMIT 2', async (err, result5) => {
+                                                await db.query('SELECT pk, title, hash, main_img, date FROM theme_table ORDER BY pk DESC LIMIT 5', async (err, result4) => {
                                                     if (err) {
                                                         console.log(err)
                                                         return response(req, res, -200, "서버 에러 발생", [])
                                                     } else {
-                                                        await db.query('SELECT pk, title, hash, main_img, date FROM strategy_table ORDER BY pk DESC LIMIT 3', async (err, result6) => {
+                                                        await db.query('SELECT pk, title, link FROM video_table ORDER BY pk DESC LIMIT 5', async (err, result5) => {
                                                             if (err) {
                                                                 console.log(err)
                                                                 return response(req, res, -200, "서버 에러 발생", [])
                                                             } else {
-                                                                return response(req, res, 100, "success", { masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, videos: result5, strategies:result6 })
+                                                                await db.query('SELECT pk, title, hash, main_img, date FROM strategy_table ORDER BY pk DESC LIMIT 3', async (err, result6) => {
+                                                                    if (err) {
+                                                                        console.log(err)
+                                                                        return response(req, res, -200, "서버 에러 발생", [])
+                                                                    } else {
+                                                                        return response(req, res, 100, "success", { setting: result_1[0], masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, videos: result5, strategies: result6 })
+                                                                    }
+                                                                })
                                                             }
                                                         })
                                                     }
@@ -393,6 +400,7 @@ const getHomeContent = (req, res) => {
                 })
             }
         })
+
 
     } catch (err) {
         console.log(err)
@@ -565,11 +573,13 @@ const getItem = (req, res) => {
         if (table != "user" && table != "issue_category") {
             sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
         }
+        console.log(sql)
         db.query(sql, [pk], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
+                console.log(result)
                 return response(req, res, 100, "success", result[0])
             }
         })
@@ -673,9 +683,9 @@ const getItems = (req, res) => {
         if (req.query.user_pk) {
             whereStr += ` AND user_pk=${req.query.user_pk} `;
         }
-        
+
         sql = sql + whereStr + " ORDER BY pk DESC ";
-        if(req.query.limit&&!req.query.page){
+        if (req.query.limit && !req.query.page) {
             sql += ` LIMIT ${req.query.limit} `;
         }
         if (req.query.page) {
@@ -706,8 +716,22 @@ const getItems = (req, res) => {
                 }
             })
         }
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
     }
-    catch (err) {
+}
+const getSetting = (req, res) => {
+    try {
+        db.query("SELECT * FROM setting_table ORDER BY pk DESC LIMIT 1", (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", result[0])
+            }
+        })
+    } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
     }
@@ -731,10 +755,45 @@ const deleteItem = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const addSetting = (req, res) => {
+    try {
+        const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        db.query("INSERT INTO setting_table (main_img) VALUES (?)", [image], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateSetting = (req, res) => {
+    try {
+        const pk = req.body.pk;
+        const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        db.query("UPDATE setting_table SET main_img=? WHERE pk=?", [image, pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 module.exports = {
     onLoginById, getUserToken, onLogout,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, //update
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting,//select
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, //insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting,//update
     deleteItem
 };
