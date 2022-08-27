@@ -5,7 +5,7 @@ const {
     onLoginById, getUserToken, onLogout,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting,//update
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus,//update
     deleteItem
 } = require('./api')
 
@@ -35,4 +35,5 @@ router.get('/gethomecontent', getHomeContent);
 router.post('/updatesetting', upload.single('master'), updateSetting);
 router.post('/addsetting', upload.single('master'), addSetting);
 router.get('/setting', getSetting);
+router.post('/updatestatus', updateStatus);
 module.exports = router;
