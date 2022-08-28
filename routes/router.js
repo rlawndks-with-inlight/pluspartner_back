@@ -3,7 +3,7 @@ const router = express.Router();
 const { upload } = require('../config/multerConfig')
 const {
     onLoginById, getUserToken, onLogout,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus,//update
     deleteItem
@@ -36,4 +36,6 @@ router.post('/updatesetting', upload.single('master'), updateSetting);
 router.post('/addsetting', upload.single('master'), addSetting);
 router.get('/setting', getSetting);
 router.post('/updatestatus', updateStatus);
+router.get('/getvideocontent', getVideoContent);
+
 module.exports = router;

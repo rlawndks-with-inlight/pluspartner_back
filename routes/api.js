@@ -407,6 +407,31 @@ const getHomeContent = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const getVideoContent = (req, res) => {
+    try {
+        const pk = req.query.pk;
+        let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;
+        let sql2 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY pk DESC LIMIT 5`;
+        db.query(sql1, [pk], async (err, result1) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                await db.query(sql2, (err, result2) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "서버 에러 발생", [])
+                    } else {
+                        return response(req, res, 100, "success", {item:result1[0],latests:result2})
+                    }
+                })
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const addOneWord = (req, res) => {
     try {
         const { title, hash, suggest_title, note, user_pk } = req.body;
@@ -573,7 +598,6 @@ const getItem = (req, res) => {
         if (table != "user" && table != "issue_category") {
             sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
         }
-        console.log(sql)
         db.query(sql, [pk], (err, result) => {
             if (err) {
                 console.log(err)
@@ -680,13 +704,13 @@ const getItems = (req, res) => {
         if (req.query.category_pk) {
             whereStr += ` AND category_pk=${req.query.category_pk} `;
         }
-        if(req.query.status) {
+        if (req.query.status) {
             whereStr += ` AND status=${req.query.status} `;
         }
         if (req.query.user_pk) {
             whereStr += ` AND user_pk=${req.query.user_pk} `;
         }
-        
+
         sql = sql + whereStr + " ORDER BY pk DESC ";
         if (req.query.limit && !req.query.page) {
             sql += ` LIMIT ${req.query.limit} `;
@@ -813,7 +837,7 @@ const updateStatus = (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus,//update
     deleteItem
