@@ -3,15 +3,18 @@ const router = express.Router();
 const { upload } = require('../config/multerConfig')
 const {
     onLoginById, getUserToken, onLogout,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus,//update
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, //select
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, //insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel,//update
     deleteItem
 } = require('./api')
 
 router.post('/adduser', onSignUp);
-router.post('/addmaster', upload.single('master'), addMaster);
-router.post('/updatemaster', upload.single('master'), updateMaster);
+router.post('/addmaster', upload.fields([{ name: 'master' }, { name: 'channel' }]), addMaster);
+router.post('/updatemaster', upload.fields([{ name: 'master' }, { name: 'channel' }]), updateMaster);
+router.post('/addchannel', upload.single('channel'), addChannel);
+router.post('/updatechannel', upload.single('channel'), updateChannel);
+router.get('/getchannel',getChannelList)
 router.post('/loginbyid', onLoginById);
 router.post('/logout', onLogout);
 router.get('/auth', getUserToken);

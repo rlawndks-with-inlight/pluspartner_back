@@ -252,7 +252,8 @@ const addMaster = (req, res) => {
         const name = req.body.name ?? "";
         const nickname = req.body.nickname ?? "";
         const user_level = req.body.user_level ?? 30;
-        const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        const masterImg = '/image/' + req.files.master[0].fieldname + '/' + req.files.master[0].filename;
+        const channelImg = '/image/' + req.files.channel[0].fieldname + '/' + req.files.channel[0].filename;
         //중복 체크 
         let sql = "SELECT * FROM user_table WHERE id=?"
 
@@ -269,8 +270,8 @@ const addMaster = (req, res) => {
                         response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
                     }
 
-                    sql = 'INSERT INTO user_table (id, pw, name, nickname, user_level, profile_img) VALUES (?, ?, ?, ?, ?, ?)'
-                    await db.query(sql, [id, hash, name, nickname, user_level, image], (err, result) => {
+                    sql = 'INSERT INTO user_table (id, pw, name, nickname, user_level, profile_img, channel_img) VALUES (?, ?, ?, ?, ?, ?, ?)'
+                    await db.query(sql, [id, hash, name, nickname, user_level, masterImg, channelImg], (err, result) => {
 
                         if (err) {
                             console.log(err)
@@ -296,10 +297,11 @@ const updateMaster = (req, res) => {
         const name = req.body.name ?? "";
         const nickname = req.body.nickname ?? "";
         const pk = req.body.pk;
-        let image = "";
+        let masterImg = "";
+        let channelImg = "";
         let sql = "SELECT * FROM user_table WHERE id=? AND pk!=?"
         db.query(sql, [id, pk], async (err, result) => {
-            if (result.length > 0)
+            if (result?.length > 0)
                 response(req, res, -200, "ID가 중복됩니다.", [])
             else {
                 let columns = " id=?, name=?, nickname=? ";
@@ -315,10 +317,15 @@ const updateMaster = (req, res) => {
                             columns += ", pw =?"
                             zColumn.push(hash);
                         }
-                        if (req.file) {
-                            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+                        if (req.files.master) {
+                            masterImg = '/image/' + req.files.master[0].fieldname + '/' + req.files.master[0].filename;
                             columns += ", profile_img=?"
-                            zColumn.push(image);
+                            zColumn.push(masterImg);
+                        }
+                        if (req.files.channel) {
+                            channelImg = '/image/' + req.files.channel[0].fieldname + '/' + req.files.channel[0].filename;
+                            columns += ", channel_img=?"
+                            zColumn.push(channelImg);
                         }
                         zColumn.push(pk)
                         await db.query(`UPDATE user_table SET ${columns} WHERE pk=?`, zColumn, (err, result) => {
@@ -337,6 +344,77 @@ const updateMaster = (req, res) => {
 
     }
     catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addChannel = (req, res) => {
+    try {
+        const id = req.body.id ?? "";
+        const pw = req.body.pw ?? "";
+        const name = req.body.name ?? "";
+        const nickname = req.body.nickname ?? "";
+        const user_level = req.body.user_level ?? 25;
+        let image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        let sql = "SELECT * FROM user_table WHERE id=?"
+
+        db.query(sql, [id], (err, result) => {
+            if (result.length > 0)
+                response(req, res, -200, "ID가 중복됩니다.", [])
+            else {
+                crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+                    // bcrypt.hash(pw, salt, async (err, hash) => {
+                    let hash = decoded.toString('base64')
+
+                    if (err) {
+                        console.log(err)
+                        response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
+                    }
+
+                    sql = 'INSERT INTO user_table (id, pw, name, nickname, user_level, channel_img) VALUES (?, ?, ?, ?, ?, ?)'
+                    await db.query(sql, [id, hash, name, nickname, user_level, image], (err, result) => {
+
+                        if (err) {
+                            console.log(err)
+                            response(req, res, -200, "fail", [])
+                        }
+                        else {
+                            response(req, res, 200, "성공적으로 추가되었습니다.", [])
+                        }
+                    })
+                })
+            }
+        })
+
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateChannel = (req, res) => {
+    try {
+        let nickname = req.body.nickname;
+        const pk = req.body.pk;
+        let image = "";
+        let columns = " nickname=? ";
+        let zColumn = [nickname];
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            columns += ", channel_img=? ";
+            zColumn.push(image);
+        }
+        zColumn.push(pk);
+        db.query(`UPDATE user_table SET ${columns} WHERE pk=?`, zColumn, (err, result) => {
+            if (err) {
+                console.log(err)
+                response(req, res, -200, "fail", [])
+            }
+            else {
+                response(req, res, 200, "성공적으로 수정되었습니다.", [])
+            }
+        })
+
+    } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
     }
@@ -363,22 +441,22 @@ const getHomeContent = (req, res) => {
                                         console.log(err)
                                         return response(req, res, -200, "서버 에러 발생", [])
                                     } else {
-                                        await db.query('SELECT pk, title, hash, main_img, date FROM issue_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result3) => {
+                                        await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result3) => {
                                             if (err) {
                                                 console.log(err)
                                                 return response(req, res, -200, "서버 에러 발생", [])
                                             } else {
-                                                await db.query('SELECT pk, title, hash, main_img, date FROM theme_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result4) => {
+                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result4) => {
                                                     if (err) {
                                                         console.log(err)
                                                         return response(req, res, -200, "서버 에러 발생", [])
                                                     } else {
-                                                        await db.query('SELECT pk, title, link FROM video_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result5) => {
+                                                        await db.query('SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result5) => {
                                                             if (err) {
                                                                 console.log(err)
                                                                 return response(req, res, -200, "서버 에러 발생", [])
                                                             } else {
-                                                                await db.query('SELECT pk, title, hash, main_img, date FROM strategy_table WHERE status=1 ORDER BY pk DESC LIMIT 3', async (err, result6) => {
+                                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM strategy_table WHERE status=1 ORDER BY pk DESC LIMIT 3', async (err, result6) => {
                                                                     if (err) {
                                                                         console.log(err)
                                                                         return response(req, res, -200, "서버 에러 발생", [])
@@ -407,6 +485,21 @@ const getHomeContent = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const getChannelList = (req, res) => {
+    try {
+        db.query("SELECT * FROM user_table WHERE user_level IN (25, 30) ", (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", result)
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const getVideoContent = (req, res) => {
     try {
         const pk = req.query.pk;
@@ -422,7 +515,7 @@ const getVideoContent = (req, res) => {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        return response(req, res, 100, "success", {item:result1[0],latests:result2})
+                        return response(req, res, 100, "success", { item: result1[0], latests: result2 })
                     }
                 })
             }
@@ -490,10 +583,10 @@ const addOneEvent = (req, res) => {
 }
 const addItem = (req, res) => {
     try {
-        const { title, hash, suggest_title, note, user_pk, table, category } = req.body;
-        let zColumn = [title, hash, suggest_title, note, user_pk];
-        let columns = "(title, hash, suggest_title, note, user_pk";
-        let values = "(?, ?, ?, ?, ?";
+        const { title, hash, suggest_title, note, user_pk, table, category, font_color, background_color } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color];
+        let columns = "(title, hash, suggest_title, note, user_pk, font_color, background_color";
+        let values = "(?, ?, ?, ?, ?, ?, ?";
         if (category) {
             zColumn.push(category);
             columns += ', category_pk '
@@ -555,9 +648,9 @@ const updateIssueCategory = (req, res) => {
 }
 const updateItem = (req, res) => {
     try {
-        const { title, hash, suggest_title, note, user_pk, table, category, pk } = req.body;
-        let zColumn = [title, hash, suggest_title, note, user_pk];
-        let columns = " title=?, hash=?, suggest_title=?, note=?, user_pk=? ";
+        const { title, hash, suggest_title, note, user_pk, table, category, font_color, background_color, pk } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color];
+        let columns = " title=?, hash=?, suggest_title=?, note=?, user_pk=?, font_color=?, background_color=? ";
         if (category) {
             zColumn.push(category);
             columns += ', category_pk=? '
@@ -603,7 +696,6 @@ const getItem = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                console.log(result)
                 return response(req, res, 100, "success", result[0])
             }
         })
@@ -616,8 +708,8 @@ const getItem = (req, res) => {
 }
 const addVideo = (req, res) => {
     try {
-        const { user_pk, title, link, note } = req.body;
-        db.query("INSERT INTO video_table (user_pk, title, link, note) VALUES (?, ?, ?, ?)", [user_pk, title, link, note], (err, result) => {
+        const { user_pk, title, link, note, font_color, background_color } = req.body;
+        db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color) VALUES (?, ?, ?, ?, ?, ?)", [user_pk, title, link, note, font_color, background_color], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -633,8 +725,8 @@ const addVideo = (req, res) => {
 }
 const updateVideo = (req, res) => {
     try {
-        const { user_pk, title, link, note, pk } = req.body;
-        db.query("UPDATE video_table SET  title=?, link=?, note=? WHERE pk=?", [title, link, note, pk], (err, result) => {
+        const { user_pk, title, link, note, font_color, background_color, pk } = req.body;
+        db.query("UPDATE video_table SET user_pk=?, title=?, link=?, note=?, font_color=?, background_color=? WHERE pk=?", [user_pk, title, link, note, font_color, background_color, pk], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -837,8 +929,8 @@ const updateStatus = (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus,//update
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, //select
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, //insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel,//update
     deleteItem
 };
