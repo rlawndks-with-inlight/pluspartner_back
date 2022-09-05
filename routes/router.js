@@ -3,9 +3,9 @@ const router = express.Router();
 const { upload } = require('../config/multerConfig')
 const {
     onLoginById, getUserToken, onLogout,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, //select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel,//update
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo,//select
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, //insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory,//update
     deleteItem
 } = require('./api')
 
@@ -27,6 +27,8 @@ router.post('/addvideo', addVideo);
 router.post('/updatevideo', updateVideo);
 router.post('/addissuecategory', addIssueCategory);
 router.post('/updateissuecategory', updateIssueCategory);
+router.post('/addfeaturecategory', addFeatureCategory);
+router.post('/updatefeaturecategory', updateFeatureCategory);
 router.post('/addimage', upload.single('note'), addNoteImage);
 router.post('/deleteitem', deleteItem);
 router.post('/updateuser', updateUser);
@@ -40,5 +42,6 @@ router.post('/addsetting', upload.single('master'), addSetting);
 router.get('/setting', getSetting);
 router.post('/updatestatus', updateStatus);
 router.get('/getvideocontent', getVideoContent);
+router.get('/video/:pk', getVideo);
 
 module.exports = router;
