@@ -518,7 +518,7 @@ const getVideo = (req, res) => {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        return response(req, res, 100, "success", {video:result[0],relate:result2})
+                        return response(req, res, 100, "success", { video: result[0], relate: result2 })
                     }
                 })
             }
@@ -534,33 +534,43 @@ const getVideoContent = (req, res) => {
         const pk = req.query.pk;
         let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;
         let sql3 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY pk DESC LIMIT 5`;
+        if(req.query.views){
+            db.query("UPDATE video_table SET views=views+1 WHERE pk=?",[pk],(err, result_view)=>{
+                if (err) {
+                    console.log(err)
+                    response(req, res, -200, "서버 에러 발생", [])
+                }else{
+                }
+            })
+        }
         db.query(sql1, [pk], async (err, result1) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                let list = JSON.parse(result1[0]?.relate_video)??[];
-                if(list.length>0){
+                
+                let list = JSON.parse(result1[0]?.relate_video) ?? [];
+                if (list.length > 0) {
                     list = list.join();
-                }else{
+                } else {
                     list = "0";
                 }
-                await db.query(`SELECT pk, link, title FROM video_table WHERE pk IN(${list})`,async (err, result2) => {
+                await db.query(`SELECT pk, link, title FROM video_table WHERE pk IN(${list})`, async (err, result2) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        await db.query(sql3, (err, result3) => {
+                        await db.query(sql3, async(err, result3) => {
                             if (err) {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
                             } else {
-                                return response(req, res, 100, "success", { item: result1[0], latests: result3, relates:result2 })
+                                return response(req, res, 100, "success", { item: result1[0], latests: result3, relates: result2 })
                             }
                         })
                     }
                 })
-                
+
             }
         })
     } catch (err) {
@@ -659,8 +669,12 @@ const addItem = (req, res) => {
 }
 const addIssueCategory = (req, res) => {
     try {
-        const { title } = req.body;
-        db.query("INSERT INTO issue_category_table (title) VALUES (?)", [title], (err, result) => {
+        const { title,sub_title } = req.body;
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        } 
+        db.query("INSERT INTO issue_category_table (title,sub_title,main_img) VALUES (?,?,?)", [title,sub_title, image], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
@@ -675,8 +689,18 @@ const addIssueCategory = (req, res) => {
 }
 const updateIssueCategory = (req, res) => {
     try {
-        const { title, pk } = req.body;
-        db.query("UPDATE issue_category_table SET title=? WHERE pk=?", [title, pk], (err, result) => {
+        const { title, sub_title, pk } = req.body;
+        let zColumn = [title, sub_title];
+        let columns = " title=?, sub_title=? ";
+        
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            zColumn.push(image);
+            columns += ', main_img=? '
+        }
+        zColumn.push(pk)
+        db.query(`UPDATE issue_category_table SET ${columns} WHERE pk=?`, zColumn, (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
@@ -691,8 +715,12 @@ const updateIssueCategory = (req, res) => {
 }
 const addFeatureCategory = (req, res) => {
     try {
-        const { title } = req.body;
-        db.query("INSERT INTO feature_category_table (title) VALUES (?)", [title], (err, result) => {
+        const { title,sub_title } = req.body;
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        } 
+        db.query("INSERT INTO feature_category_table (title,sub_title,main_img) VALUES (?,?,?)", [title,sub_title, image], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
@@ -707,8 +735,18 @@ const addFeatureCategory = (req, res) => {
 }
 const updateFeatureCategory = (req, res) => {
     try {
-        const { title, pk } = req.body;
-        db.query("UPDATE feature_category_table SET title=? WHERE pk=?", [title, pk], (err, result) => {
+        const { title, sub_title, pk } = req.body;
+        let zColumn = [title, sub_title];
+        let columns = " title=?, sub_title=? ";
+        
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            zColumn.push(image);
+            columns += ', main_img=? '
+        }
+        zColumn.push(pk)
+        db.query(`UPDATE feature_category_table SET ${columns} WHERE pk=?`, zColumn, (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
@@ -766,6 +804,15 @@ const getItem = (req, res) => {
         if (table != "user" && table != "issue_category" && table != "feature_category") {
             sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
         }
+        if(req.query.views){
+            db.query(`UPDATE ${table}_table SET views=views+1 WHERE pk=?`,[pk],(err, result_view)=>{
+                if (err) {
+                    console.log(err)
+                    response(req, res, -200, "서버 에러 발생", [])
+                }else{
+                }
+            })
+        }
         db.query(sql, [pk], (err, result) => {
             if (err) {
                 console.log(err)
@@ -783,8 +830,8 @@ const getItem = (req, res) => {
 }
 const addVideo = (req, res) => {
     try {
-        const { user_pk, title, link, note, font_color, background_color,relate_video } = req.body;
-        db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color,relate_video) VALUES (?, ?, ?, ?, ?, ?,?)", [user_pk, title, link, note, font_color, background_color,relate_video], (err, result) => {
+        const { user_pk, title, link, note, font_color, background_color, relate_video } = req.body;
+        db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color,relate_video) VALUES (?, ?, ?, ?, ?, ?,?)", [user_pk, title, link, note, font_color, background_color, relate_video], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -800,8 +847,42 @@ const addVideo = (req, res) => {
 }
 const updateVideo = (req, res) => {
     try {
-        const { user_pk, title, link, note, font_color, background_color,relate_video, pk } = req.body;
-        db.query("UPDATE video_table SET user_pk=?, title=?, link=?, note=?, font_color=?, background_color=?,relate_video=? WHERE pk=?", [user_pk, title, link, note, font_color, background_color,relate_video, pk], (err, result) => {
+        const { user_pk, title, link, note, font_color, background_color, relate_video, pk } = req.body;
+        db.query("UPDATE video_table SET user_pk=?, title=?, link=?, note=?, font_color=?, background_color=?,relate_video=? WHERE pk=?", [user_pk, title, link, note, font_color, background_color, relate_video, pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addNotice = (req, res) => {
+    try {
+        const { title, note,user_pk } = req.body;
+        db.query("INSERT INTO notice_table ( title, note,user_pk) VALUES (?, ?, ?)", [title, note,user_pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateNotice = (req, res) => {
+    try {
+        const { title, note, pk } = req.body;
+        db.query("UPDATE notice_table SET  title=?, note=? WHERE pk=?", [title, note, pk], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -882,7 +963,6 @@ const getItems = (req, res) => {
         }
 
         sql = sql + whereStr + " ORDER BY pk DESC ";
-        console.log(sql)
         if (req.query.limit && !req.query.page) {
             sql += ` LIMIT ${req.query.limit} `;
         }
@@ -1010,7 +1090,7 @@ const updateStatus = (req, res) => {
 module.exports = {
     onLoginById, getUserToken, onLogout,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory,//update
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice,//update
     deleteItem
 };

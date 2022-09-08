@@ -4,8 +4,8 @@ const { upload } = require('../config/multerConfig')
 const {
     onLoginById, getUserToken, onLogout,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory,//update
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice,//update
     deleteItem
 } = require('./api')
 
@@ -14,7 +14,7 @@ router.post('/addmaster', upload.fields([{ name: 'master' }, { name: 'channel' }
 router.post('/updatemaster', upload.fields([{ name: 'master' }, { name: 'channel' }]), updateMaster);
 router.post('/addchannel', upload.single('channel'), addChannel);
 router.post('/updatechannel', upload.single('channel'), updateChannel);
-router.get('/getchannel',getChannelList)
+router.get('/getchannel', getChannelList)
 router.post('/loginbyid', onLoginById);
 router.post('/logout', onLogout);
 router.get('/auth', getUserToken);
@@ -25,10 +25,12 @@ router.post('/additem', upload.single('content'), addItem);
 router.post('/updateitem', upload.single('content'), updateItem);
 router.post('/addvideo', addVideo);
 router.post('/updatevideo', updateVideo);
-router.post('/addissuecategory', addIssueCategory);
-router.post('/updateissuecategory', updateIssueCategory);
-router.post('/addfeaturecategory', addFeatureCategory);
-router.post('/updatefeaturecategory', updateFeatureCategory);
+router.post('/addnotice', addNotice);
+router.post('/updatenotice', updateNotice);
+router.post('/addissuecategory', upload.single('content'), addIssueCategory);
+router.post('/updateissuecategory', upload.single('content'), updateIssueCategory);
+router.post('/addfeaturecategory', upload.single('content'), addFeatureCategory);
+router.post('/updatefeaturecategory', upload.single('content'), updateFeatureCategory);
 router.post('/addimage', upload.single('note'), addNoteImage);
 router.post('/deleteitem', deleteItem);
 router.post('/updateuser', updateUser);
