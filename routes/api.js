@@ -534,12 +534,12 @@ const getVideoContent = (req, res) => {
         const pk = req.query.pk;
         let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;
         let sql3 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY pk DESC LIMIT 5`;
-        if(req.query.views){
-            db.query("UPDATE video_table SET views=views+1 WHERE pk=?",[pk],(err, result_view)=>{
+        if (req.query.views) {
+            db.query("UPDATE video_table SET views=views+1 WHERE pk=?", [pk], (err, result_view) => {
                 if (err) {
                     console.log(err)
                     response(req, res, -200, "서버 에러 발생", [])
-                }else{
+                } else {
                 }
             })
         }
@@ -548,7 +548,7 @@ const getVideoContent = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                
+
                 let list = JSON.parse(result1[0]?.relate_video) ?? [];
                 if (list.length > 0) {
                     list = list.join();
@@ -560,7 +560,7 @@ const getVideoContent = (req, res) => {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        await db.query(sql3, async(err, result3) => {
+                        await db.query(sql3, async (err, result3) => {
                             if (err) {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
@@ -669,12 +669,12 @@ const addItem = (req, res) => {
 }
 const addIssueCategory = (req, res) => {
     try {
-        const { title,sub_title } = req.body;
+        const { title, sub_title } = req.body;
         let image = "";
         if (req.file) {
             image = '/image/' + req.file.fieldname + '/' + req.file.filename;
-        } 
-        db.query("INSERT INTO issue_category_table (title,sub_title,main_img) VALUES (?,?,?)", [title,sub_title, image], (err, result) => {
+        }
+        db.query("INSERT INTO issue_category_table (title,sub_title,main_img) VALUES (?,?,?)", [title, sub_title, image], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
@@ -692,7 +692,7 @@ const updateIssueCategory = (req, res) => {
         const { title, sub_title, pk } = req.body;
         let zColumn = [title, sub_title];
         let columns = " title=?, sub_title=? ";
-        
+
         let image = "";
         if (req.file) {
             image = '/image/' + req.file.fieldname + '/' + req.file.filename;
@@ -715,12 +715,12 @@ const updateIssueCategory = (req, res) => {
 }
 const addFeatureCategory = (req, res) => {
     try {
-        const { title,sub_title } = req.body;
+        const { title, sub_title } = req.body;
         let image = "";
         if (req.file) {
             image = '/image/' + req.file.fieldname + '/' + req.file.filename;
-        } 
-        db.query("INSERT INTO feature_category_table (title,sub_title,main_img) VALUES (?,?,?)", [title,sub_title, image], (err, result) => {
+        }
+        db.query("INSERT INTO feature_category_table (title,sub_title,main_img) VALUES (?,?,?)", [title, sub_title, image], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
@@ -738,7 +738,7 @@ const updateFeatureCategory = (req, res) => {
         const { title, sub_title, pk } = req.body;
         let zColumn = [title, sub_title];
         let columns = " title=?, sub_title=? ";
-        
+
         let image = "";
         if (req.file) {
             image = '/image/' + req.file.fieldname + '/' + req.file.filename;
@@ -804,12 +804,12 @@ const getItem = (req, res) => {
         if (table != "user" && table != "issue_category" && table != "feature_category") {
             sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
         }
-        if(req.query.views){
-            db.query(`UPDATE ${table}_table SET views=views+1 WHERE pk=?`,[pk],(err, result_view)=>{
+        if (req.query.views) {
+            db.query(`UPDATE ${table}_table SET views=views+1 WHERE pk=?`, [pk], (err, result_view) => {
                 if (err) {
                     console.log(err)
                     response(req, res, -200, "서버 에러 발생", [])
-                }else{
+                } else {
                 }
             })
         }
@@ -864,8 +864,8 @@ const updateVideo = (req, res) => {
 }
 const addNotice = (req, res) => {
     try {
-        const { title, note,user_pk } = req.body;
-        db.query("INSERT INTO notice_table ( title, note,user_pk) VALUES (?, ?, ?)", [title, note,user_pk], (err, result) => {
+        const { title, note, user_pk } = req.body;
+        db.query("INSERT INTO notice_table ( title, note,user_pk) VALUES (?, ?, ?)", [title, note, user_pk], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -905,6 +905,61 @@ const addNoteImage = (req, res) => {
         }
     }
     catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const onSearchAllItem = (req, res) => {
+    try {
+        let keyword = req.query.keyword;
+        console.log(keyword);
+        let sql  = `SELECT pk, title, `
+        db.query(`SELECT pk, title, hash FROM oneword_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result1) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                await db.query(`SELECT pk, title, hash FROM oneevent_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result2) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "서버 에러 발생", [])
+                    } else {
+                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result3) => {
+                            if (err) {
+                                console.log(err)
+                                return response(req, res, -200, "서버 에러 발생", [])
+                            } else {
+                                await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result4) => {
+                                    if (err) {
+                                        console.log(err)
+                                        return response(req, res, -200, "서버 에러 발생", [])
+                                    } else {
+                                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result5) => {
+                                            if (err) {
+                                                console.log(err)
+                                                return response(req, res, -200, "서버 에러 발생", [])
+                                            } else {
+                                                await db.query(`SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result6) => {
+                                                    if (err) {
+                                                        console.log(err)
+                                                        return response(req, res, -200, "서버 에러 발생", [])
+                                                    } else {
+                                                            return response(req, res, 100, "success", {   oneWord: result1, oneEvent: result2, issues: result3, features: result4, themes: result5, videos:result6 });
+                                                    }
+                                                })
+                                            }
+                                        })
+                                    }
+                                })
+                               
+                            }
+                        })
+                    }
+                })
+            }
+        })
+
+    } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
     }
@@ -1089,7 +1144,7 @@ const updateStatus = (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice,//update
     deleteItem

@@ -3,7 +3,7 @@ const router = express.Router();
 const { upload } = require('../config/multerConfig')
 const {
     onLoginById, getUserToken, onLogout,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice,//update
     deleteItem
@@ -34,6 +34,7 @@ router.post('/updatefeaturecategory', upload.single('content'), updateFeatureCat
 router.post('/addimage', upload.single('note'), addNoteImage);
 router.post('/deleteitem', deleteItem);
 router.post('/updateuser', updateUser);
+router.get('/onsearchallitem', onSearchAllItem);
 router.get('/oneword', getOneWord);
 router.get('/oneevent', getOneEvent);
 router.get('/items', getItems);

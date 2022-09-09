@@ -100,9 +100,7 @@ async function getDatasWithKeywordAtPage(table, columns, keyword, page) {
         }
         sql += 'ORDER BY pk DESC '
         if(page)
-            sql += ' LIMIT ' + page + ', 10'
-        else
-            sql += ' LIMIT 0, 10'
+            sql += ' LIMIT ' + (page-1) + ', 10'
     }
     
     return await dbQueryList(sql).then(result => {
