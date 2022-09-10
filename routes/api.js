@@ -167,6 +167,7 @@ const sendSms = (req, res) => {
     try {
         let receiver = req.body.receiver;
         const content = req.body.content;
+        console.log(req.body)
         sendAligoSms({ receivers: receiver, message: content }).then((result) => {
             console.log(result)
         });
