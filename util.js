@@ -29,7 +29,21 @@ let checkLevel = (token, level) => {
         return false
     }
 }
-
+const formatPhoneNumber = (input) => {
+    const cleanInput = input.replaceAll(/[^0-9]/g, "");
+    let result = "";
+    const length = cleanInput.length;
+    if(length === 8) {
+        result = cleanInput.replace(/(\d{4})(\d{4})/, '$1-$2');
+    } else if(cleanInput.startsWith("02") && (length === 9 || length === 10)) {
+        result = cleanInput.replace(/(\d{2})(\d{3,4})(\d{4})/, '$1-$2-$3');
+    } else if(!cleanInput.startsWith("02") && (length === 10 || length === 11)) {
+        result = cleanInput.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+    } else {
+        result = undefined;
+    }
+    return result;
+}
 const lowLevelException = {
     code: 403,
     message: "권한이 없습니다."
@@ -215,5 +229,5 @@ module.exports = {
     logRequestResponse, logResponse, logRequest,
     getUserPKArrStrWithNewPK, isNotNullOrUndefined,
     namingImagesPath, getSQLnParams,
-    nullResponse, lowLevelResponse, response, removeItems, returnMoment
+    nullResponse, lowLevelResponse, response, removeItems, returnMoment,formatPhoneNumber
 }

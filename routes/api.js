@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken')
 
 const { checkLevel, getSQLnParams, getUserPKArrStrWithNewPK,
     isNotNullOrUndefined, namingImagesPath, nullResponse,
-    lowLevelResponse, response, removeItems, returnMoment
+    lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber
 } = require('../util')
 const {
     getRowsNumWithKeyword, getRowsNum, getAllDatas,
@@ -167,7 +167,7 @@ const sendSms = (req, res) => {
     try {
         const receiver = req.body.receiver;
         const content = req.body.content;
-        sendAligoSms({ receivers: [receiver], message: content }).then((result) => {
+        sendAligoSms({ receivers: [receiver,formatPhoneNumber(receiver)], message: content }).then((result) => {
             console.log(result)
         });
     } catch (e) {
@@ -982,7 +982,6 @@ const addNoteImage = (req, res) => {
 const onSearchAllItem = (req, res) => {
     try {
         let keyword = req.query.keyword;
-        console.log(keyword);
         let sql = `SELECT pk, title, `
         db.query(`SELECT pk, title, hash FROM oneword_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result1) => {
             if (err) {
