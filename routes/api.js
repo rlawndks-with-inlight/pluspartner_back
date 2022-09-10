@@ -163,12 +163,12 @@ const sendAligoSms = ({ receivers, message }) => {
         console.log('err', err);
     });
 }
-const sendSms = (req, res) =>{
+const sendSms = (req, res) => {
     try {
         const receiver = req.body.receiver;
         const content = req.body.content;
         sendAligoSms({ receivers: [receiver], message: content }).then((result) => {
-           console.log(result)
+            console.log(result)
         });
     } catch (e) {
         console.log(e)
@@ -1213,7 +1213,7 @@ const updateStatus = (req, res) => {
     }
 }
 module.exports = {
-    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname,//auth
+    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice,//update
