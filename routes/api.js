@@ -169,6 +169,11 @@ const sendSms = (req, res) => {
         console.log(req.body)
         sendAligoSms({ receivers: receiver, message: content }).then((result) => {
             console.log(result)
+            if(result.result_code=='1'){
+                return response(req, res, 100, "success", [])
+            }else{
+                return response(req, res, -100, "fail", [])
+            }
         });
     } catch (e) {
         console.log(e)
