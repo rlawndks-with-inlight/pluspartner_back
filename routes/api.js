@@ -23,6 +23,7 @@ const db = require('../config/db')
 const { upload } = require('../config/multerConfig')
 const { Console } = require('console')
 const { abort } = require('process')
+const axios = require('axios')
 //const { pbkdf2 } = require('crypto')
 const salt = "435f5ef2ffb83a632c843926b35ae7855bc2520021a73a043db41670bfaeb722"
 const saltRounds = 10
@@ -142,6 +143,74 @@ const onLoginById = async (req, res) => {
 }
 const onLoginByPhone = (req, res) => {
     try {
+
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const sendAligoSms = ({ receivers, message }) => {
+    return axios.post('https://apis.aligo.in/send/', null, {
+        params: {
+            key: 'xbyndmadqxp8cln66alygdq12mbpj7p7',
+            user_id: 'firstpartner',
+            sender: '010-3701-9897',
+            receiver: receivers.join(','),
+            msg: message,
+            testmode_yn: 'Y'
+        },
+    }).then((res) => res.data).catch(err => {
+        console.log('err', err);
+    });
+}
+const sendSms = (req, res) =>{
+    try {
+        const receiver = req.body.receiver;
+        const content = req.body.content;
+        sendAligoSms({ receivers: [receiver], message: content }).then((result) => {
+           console.log(result)
+        });
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const checkExistId = (req, res) => {
+    try {
+        const id = req.body.id;
+        db.query(`SELECT * FROM user_table WHERE id=? `, [id], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                if (result.length > 0) {
+                    return response(req, res, -50, "이미 사용중인 아이디입니다.", []);
+                } else {
+                    return response(req, res, 100, "사용가능한 아이디입니다.", []);
+                }
+            }
+        })
+
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const checkExistNickname = (req, res) => {
+    try {
+        const nickname = req.body.nickname;
+        db.query(`SELECT * FROM user_table WHERE nickname=? `, [nickname], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                if (result.length > 0) {
+                    return response(req, res, -50, "이미 사용중인 닉네임입니다.", []);
+                } else {
+                    return response(req, res, 100, "사용가능한 닉네임입니다.", []);
+                }
+            }
+        })
 
     } catch (e) {
         console.log(e)
@@ -898,6 +967,7 @@ const updateNotice = (req, res) => {
 }
 const addNoteImage = (req, res) => {
     try {
+        console.log(req.file)
         if (req.file) {
             return response(req, res, 100, "success", { filename: `/image/note/${req.file.filename}` })
         } else {
@@ -913,7 +983,7 @@ const onSearchAllItem = (req, res) => {
     try {
         let keyword = req.query.keyword;
         console.log(keyword);
-        let sql  = `SELECT pk, title, `
+        let sql = `SELECT pk, title, `
         db.query(`SELECT pk, title, hash FROM oneword_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result1) => {
             if (err) {
                 console.log(err)
@@ -944,14 +1014,14 @@ const onSearchAllItem = (req, res) => {
                                                         console.log(err)
                                                         return response(req, res, -200, "서버 에러 발생", [])
                                                     } else {
-                                                            return response(req, res, 100, "success", {   oneWord: result1, oneEvent: result2, issues: result3, features: result4, themes: result5, videos:result6 });
+                                                        return response(req, res, 100, "success", { oneWord: result1, oneEvent: result2, issues: result3, features: result4, themes: result5, videos: result6 });
                                                     }
                                                 })
                                             }
                                         })
                                     }
                                 })
-                               
+
                             }
                         })
                     }
@@ -1143,7 +1213,7 @@ const updateStatus = (req, res) => {
     }
 }
 module.exports = {
-    onLoginById, getUserToken, onLogout,//auth
+    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice,//update

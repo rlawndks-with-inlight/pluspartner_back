@@ -6,7 +6,8 @@ const db = mysql.createConnection({
     password : 'qjfwk100djr!',
     port : 3306,
     database:'stock_integrated',
-    timezone: 'Asia/Seoul'
+    timezone: 'Asia/Seoul',
+    charset: 'utf8mb4'
 })
 db.connect();
 
