@@ -156,8 +156,7 @@ const sendAligoSms = ({ receivers, message }) => {
             user_id: 'firstpartner',
             sender: '1522-1233',
             receiver: receivers.join(','),
-            msg: message,
-            testmode_yn: 'Y'
+            msg: message
         },
     }).then((res) => res.data).catch(err => {
         console.log('err', err);
