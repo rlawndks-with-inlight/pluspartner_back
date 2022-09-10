@@ -154,7 +154,7 @@ const sendAligoSms = ({ receivers, message }) => {
         params: {
             key: 'xbyndmadqxp8cln66alygdq12mbpj7p7',
             user_id: 'firstpartner',
-            sender: '010-3701-9897',
+            sender: '1522-1233',
             receiver: receivers.join(','),
             msg: message,
             testmode_yn: 'Y'
