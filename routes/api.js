@@ -169,9 +169,9 @@ const sendSms = (req, res) => {
         console.log(req.body)
         sendAligoSms({ receivers: receiver, message: content }).then((result) => {
             console.log(result)
-            if(result.result_code=='1'){
+            if (result.result_code == '1') {
                 return response(req, res, 100, "success", [])
-            }else{
+            } else {
                 return response(req, res, -100, "fail", [])
             }
         });
@@ -260,15 +260,18 @@ const getUsers = (req, res) => {
     try {
         let sql = "SELECT * FROM user_table ";
         let pageSql = "SELECT COUNT(*) FROM user_table ";
-
+        let page_cut = req.query.page_cut;
         let whereStr = " WHERE 1=1 ";
         if (req.query.level) {
             whereStr += ` AND user_level=${req.query.level} `;
         }
-
+        if (!page_cut) {
+            page_cut = 15
+        }
+        pageSql = pageSql + whereStr;
         sql = sql + whereStr + " ORDER BY pk DESC ";
         if (req.query.page) {
-            sql += ` LIMIT ${(req.query.page - 1) * 10}, 10`;
+            sql += ` LIMIT ${(req.query.page - 1) * page_cut}, ${page_cut}`;
             db.query(pageSql, async (err, result1) => {
                 if (err) {
                     console.log(err)
@@ -279,7 +282,7 @@ const getUsers = (req, res) => {
                             console.log(err)
                             return response(req, res, -200, "서버 에러 발생", [])
                         } else {
-                            let maxPage = result1[0]['COUNT(*)'] % 10 == 0 ? (result1[0]['COUNT(*)'] / 10) : ((result1[0]['COUNT(*)'] - result1[0]['COUNT(*)'] % 10) / 10 + 1);
+                            let maxPage = result1[0]['COUNT(*)'] % page_cut == 0 ? (result1[0]['COUNT(*)'] / page_cut) : ((result1[0]['COUNT(*)'] - result1[0]['COUNT(*)'] % page_cut) / page_cut + 1);
                             return response(req, res, 100, "success", { data: result2, maxPage: maxPage });
                         }
                     })
@@ -606,8 +609,9 @@ const getVideo = (req, res) => {
 const getVideoContent = (req, res) => {
     try {
         const pk = req.query.pk;
-        let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;
-        let sql3 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY pk DESC LIMIT 5`;
+        let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;//비디오 정보
+        let sql2 = `SELECT video_relate_table.*, video_table.* FROM video_relate_table LEFT JOIN video_table ON video_relate_table.relate_video_pk = video_table.pk WHERE video_relate_table.video_pk=? `//관련영상
+        let sql3 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY pk DESC LIMIT 5`;//최신영상
         if (req.query.views) {
             db.query("UPDATE video_table SET views=views+1 WHERE pk=?", [pk], (err, result_view) => {
                 if (err) {
@@ -622,14 +626,7 @@ const getVideoContent = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-
-                let list = JSON.parse(result1[0]?.relate_video) ?? [];
-                if (list.length > 0) {
-                    list = list.join();
-                } else {
-                    list = "0";
-                }
-                await db.query(`SELECT pk, link, title FROM video_table WHERE pk IN(${list})`, async (err, result2) => {
+                await db.query(sql2, [pk], async (err, result2) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
@@ -639,12 +636,15 @@ const getVideoContent = (req, res) => {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
                             } else {
-                                return response(req, res, 100, "success", { item: result1[0], latests: result3, relates: result2 })
+                                return response(req, res, 100, "success", {
+                                    video: result1[0],
+                                    relates: result2,
+                                    latests: result3
+                                })
                             }
                         })
                     }
                 })
-
             }
         })
     } catch (err) {
@@ -905,12 +905,25 @@ const getItem = (req, res) => {
 const addVideo = (req, res) => {
     try {
         const { user_pk, title, link, note, font_color, background_color, relate_video } = req.body;
-        db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color,relate_video) VALUES (?, ?, ?, ?, ?, ?,?)", [user_pk, title, link, note, font_color, background_color, relate_video], (err, result) => {
+        db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color) VALUES (?, ?, ?, ?, ?, ?)", [user_pk, title, link, note, font_color, background_color], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                return response(req, res, 100, "success", [])
+                let relate_videos = JSON.parse(relate_video)
+                console.log(result?.insertId)
+                let relate_list = [];
+                for (var i = 0; i < relate_videos.length; i++) {
+                    relate_list[i] = [result?.insertId, relate_videos[i]];
+                }
+                await db.query("INSERT INTO video_relate_table (video_pk, relate_video_pk) VALUES ? ", [relate_list], (err, result2) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "서버 에러 발생", [])
+                    } else {
+                        return response(req, res, 100, "success", [])
+                    }
+                })
             }
         })
     }
@@ -922,12 +935,32 @@ const addVideo = (req, res) => {
 const updateVideo = (req, res) => {
     try {
         const { user_pk, title, link, note, font_color, background_color, relate_video, pk } = req.body;
-        db.query("UPDATE video_table SET user_pk=?, title=?, link=?, note=?, font_color=?, background_color=?,relate_video=? WHERE pk=?", [user_pk, title, link, note, font_color, background_color, relate_video, pk], (err, result) => {
+        db.query("UPDATE video_table SET user_pk=?, title=?, link=?, note=?, font_color=?, background_color=? WHERE pk=?", [user_pk, title, link, note, font_color, background_color, pk], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                return response(req, res, 100, "success", [])
+                await db.query("DELETE FROM video_relate_table WHERE video_pk=?", [pk], async (err, result1) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "서버 에러 발생", [])
+                    } else {
+                        let relate_videos = JSON.parse(relate_video)
+                        let relate_list = [];
+                        for (var i = 0; i < relate_videos.length; i++) {
+                            relate_list[i] = [pk, relate_videos[i]];
+                        }
+                        await db.query("INSERT INTO video_relate_table (video_pk, relate_video_pk) VALUES ? ", [relate_list], (err, result2) => {
+                            if (err) {
+                                console.log(err)
+                                return response(req, res, -200, "서버 에러 발생", [])
+                            } else {
+                                return response(req, res, 100, "success", [])
+                            }
+                        })
+                    }
+                })
+
             }
         })
     }
@@ -1070,45 +1103,49 @@ const getOneEvent = (req, res) => {
 }
 const getItems = (req, res) => {
     try {
+        let { level, category_pk, status, user_pk, keyword, limit, page, page_cut } = req.query;
         let table = req.query.table ?? "user";
         let sql = `SELECT * FROM ${table}_table `;
         let pageSql = `SELECT COUNT(*) FROM ${table}_table `;
 
         let whereStr = " WHERE 1=1 ";
-        if (req.query.level) {
-            whereStr += ` AND user_level=${req.query.level} `;
+        if (level) {
+            whereStr += ` AND user_level=${level} `;
         }
-        if (req.query.category_pk) {
-            whereStr += ` AND category_pk=${req.query.category_pk} `;
+        if (category_pk) {
+            whereStr += ` AND category_pk=${category_pk} `;
         }
-        if (req.query.status) {
-            whereStr += ` AND status=${req.query.status} `;
+        if (status) {
+            whereStr += ` AND status=${status} `;
         }
-        if (req.query.user_pk) {
-            whereStr += ` AND user_pk=${req.query.user_pk} `;
+        if (user_pk) {
+            whereStr += ` AND user_pk=${user_pk} `;
         }
-        if (req.query.keyword) {
-            whereStr += ` AND title LIKE '%${req.query.keyword}%' `;
+        if (keyword) {
+            whereStr += ` AND title LIKE '%${keyword}%' `;
         }
-
+        if (!page_cut) {
+            page_cut = 15;
+        }
+        pageSql = pageSql + whereStr;
         sql = sql + whereStr + " ORDER BY pk DESC ";
-        if (req.query.limit && !req.query.page) {
-            sql += ` LIMIT ${req.query.limit} `;
+        if (limit && !page) {
+            sql += ` LIMIT ${limit} `;
         }
-        if (req.query.page) {
-            sql += ` LIMIT ${(req.query.page - 1) * 10}, 10`;
+        if (page) {
+
+            sql += ` LIMIT ${(page - 1) * page_cut}, ${page_cut}`;
             db.query(pageSql, async (err, result1) => {
                 if (err) {
                     console.log(err)
                     return response(req, res, -200, "서버 에러 발생", [])
                 } else {
-                    console.log(sql)
                     await db.query(sql, (err, result2) => {
                         if (err) {
                             console.log(err)
                             return response(req, res, -200, "서버 에러 발생", [])
                         } else {
-                            let maxPage = result1[0]['COUNT(*)'] % 10 == 0 ? (result1[0]['COUNT(*)'] / 10) : ((result1[0]['COUNT(*)'] - result1[0]['COUNT(*)'] % 10) / 10 + 1);
+                            let maxPage = result1[0]['COUNT(*)'] % page_cut == 0 ? (result1[0]['COUNT(*)'] / page_cut) : ((result1[0]['COUNT(*)'] - result1[0]['COUNT(*)'] % page_cut) / page_cut + 1);
                             return response(req, res, 100, "success", { data: result2, maxPage: maxPage });
                         }
                     })
@@ -1200,9 +1237,7 @@ const updateSetting = (req, res) => {
 }
 const updateStatus = (req, res) => {
     try {
-        console.log(req.body)
-        const { table, pk } = req.body;
-        let num = req.body.num == 1 ? 0 : 1;
+        const { table, pk, num } = req.body;
         db.query(`UPDATE ${table}_table SET status=? WHERE pk=? `, [num, pk], (err, result) => {
             if (err) {
                 console.log(err)
@@ -1216,10 +1251,42 @@ const updateStatus = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const onTheTopItem = (req, res) => {
+    try {
+        const { table, pk } = req.body;
+        db.query(`SHOW TABLE STATUS LIKE '${table}_table' `, async (err, result1) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                let ai = result1[0].Auto_increment;
+                await db.query(`UPDATE ${table}_table SET pk=? WHERE pk=? `, [ai, pk], async (err, result2) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "서버 에러 발생", [])
+                    } else {
+                        await db.query(`ALTER TABLE ${table}_table AUTO_INCREMENT=?`, [ai + 1], (err, result3) => {
+                            if (err) {
+                                console.log(err)
+                                return response(req, res, -200, "서버 에러 발생", [])
+                            } else {
+                                return response(req, res, 100, "success", [])
+                            }
+                        })
+                    }
+                })
+            }
+        })
+        console.log(req.body)
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice,//update
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem,//update
     deleteItem
 };
