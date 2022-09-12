@@ -5,7 +5,7 @@ const {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem,//update
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence,//update
     deleteItem
 } = require('./api')
 
@@ -50,5 +50,6 @@ router.post('/updatestatus', updateStatus);
 router.get('/getvideocontent', getVideoContent);
 router.get('/video/:pk', getVideo);
 router.post('/onthetopitem', onTheTopItem);
+router.post('/changeitemsequence', changeItemSequence);
 
 module.exports = router;
