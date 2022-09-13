@@ -1108,32 +1108,32 @@ const onSearchAllItem = (req, res) => {
     try {
         let keyword = req.query.keyword;
         let sql = `SELECT pk, title, `
-        db.query(`SELECT pk, title, hash FROM oneword_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result1) => {
+        db.query(`SELECT pk, title, hash FROM oneword_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result1) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                await db.query(`SELECT pk, title, hash FROM oneevent_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result2) => {
+                await db.query(`SELECT pk, title, hash FROM oneevent_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result2) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result3) => {
+                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result3) => {
                             if (err) {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
                             } else {
-                                await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result4) => {
+                                await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result4) => {
                                     if (err) {
                                         console.log(err)
                                         return response(req, res, -200, "서버 에러 발생", [])
                                     } else {
-                                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result5) => {
+                                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result5) => {
                                             if (err) {
                                                 console.log(err)
                                                 return response(req, res, -200, "서버 에러 발생", [])
                                             } else {
-                                                await db.query(`SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 AND title LIKE "%${keyword}%" ORDER BY pk DESC LIMIT 8`, async (err, result6) => {
+                                                await db.query(`SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 AND (title LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result6) => {
                                                     if (err) {
                                                         console.log(err)
                                                         return response(req, res, -200, "서버 에러 발생", [])
