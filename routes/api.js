@@ -200,11 +200,11 @@ const editMyInfo = (req, res) => {
                             let updateSql = "";
                             let zColumn = [];
                             if (nickname) {
-                                selectSql = "SELECT * FROM user_table WHERE nickname=?"
+                                selectSql = "SELECT * FROM user_table WHERE nickname=? AND id!=?"
                                 updateSql = "UPDATE user_table SET nickname=? WHERE id=?";
                                 zColumn.push(nickname);
                             } else if (phone) {
-                                selectSql = "SELECT * FROM user_table WHERE phone=?"
+                                selectSql = "SELECT * FROM user_table WHERE phone=? AND id!=?"
                                 updateSql = "UPDATE user_table SET phone=? WHERE id=?";
                                 zColumn.push(phone);
                             }
