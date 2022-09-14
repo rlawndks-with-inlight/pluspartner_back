@@ -179,7 +179,7 @@ const editMyInfo = (req, res) => {
                 } else {
                     if (result.length > 0) {
                         if (newPw) {
-                            await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+                            await crypto.pbkdf2(newPw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                                 // bcrypt.hash(pw, salt, async (err, hash) => {
                                 let new_hash = decoded.toString('base64')
                                 if (err) {
