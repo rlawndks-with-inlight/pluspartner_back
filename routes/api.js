@@ -160,11 +160,97 @@ const onLoginByPhone = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const editMyInfo = (req, res) => {
+    try {
+        let { pw, nickname, newPw, phone, id } = req.body;
+        crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+            // bcrypt.hash(pw, salt, async (err, hash) => {
+            let hash = decoded.toString('base64')
 
+            if (err) {
+                console.log(err)
+                response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
+            }
+
+            await db.query("SELECT * FROM user_table WHERE id=? AND pw=?", [id, hash], async (err, result) => {
+                if (err) {
+                    console.log(err);
+                    response(req, res, -100, "서버 에러 발생", [])
+                } else {
+                    if (result.length > 0) {
+                        if (newPw) {
+                            await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+                                // bcrypt.hash(pw, salt, async (err, hash) => {
+                                let new_hash = decoded.toString('base64')
+                                if (err) {
+                                    console.log(err)
+                                    response(req, res, -200, "새 비밀번호 암호화 도중 에러 발생", [])
+                                }
+                                await db.query("UPDATE user_table SET pw=? WHERE id=?", [new_hash, id], (err, result) => {
+                                    if (err) {
+                                        console.log(err)
+                                        return response(req, res, -100, "서버 에러 발생", []);
+                                    } else {
+                                        return response(req, res, 100, "success", []);
+                                    }
+                                })
+                            })
+                        } else if (nickname || phone) {
+                            let selectSql = "";
+                            let updateSql = "";
+                            let zColumn = [];
+                            if (nickname) {
+                                selectSql = "SELECT * FROM user_table WHERE nickname=?"
+                                updateSql = "UPDATE user_table SET nickname=? WHERE id=?";
+                                zColumn.push(nickname);
+                            } else if (phone) {
+                                selectSql = "SELECT * FROM user_table WHERE phone=?"
+                                updateSql = "UPDATE user_table SET phone=? WHERE id=?";
+                                zColumn.push(phone);
+                            }
+                            zColumn.push(id);
+                            await db.query(selectSql, zColumn, async(err, result1) => {
+                                if (err) {
+                                    console.log(err)
+                                    return response(req, res, -100, "서버 에러 발생", []);
+                                } else {
+                                    if(result1.length>0){
+                                        let message = "";
+                                        if (nickname) {
+                                            message = "이미 사용중인 닉네임 입니다.";
+                                        }else if (phone) {
+                                            message = "이미 사용중인 전화번호 입니다.";
+                                        }
+                                        return response(req, res, -50, message, []);
+                                    }else{
+                                        await db.query(updateSql, zColumn, (err, result2) => {
+                                            if (err) {
+                                                console.log(err)
+                                                return response(req, res, -100, "서버 에러 발생", []);
+                                            } else {
+                                                return response(req, res, 100, "success", []);
+                                            }
+                                        })
+                                    }
+                                }
+                            })
+                        }
+                    } else {
+                        response(req, res, -50, "비밀번호가 일치하지 않습니다.", [])
+                    }
+                }
+            })
+        })
+
+
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const kakaoCallBack = (req, res) => {
     try {
         const token = req.body.token;
-        const brand_name = req.body.brand;
         async function kakaoLogin() {
             let tmp;
 
@@ -1545,7 +1631,7 @@ const changeItemSequence = (req, res) => {
     }
 }
 module.exports = {
-    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack,//auth
+    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword,//update
