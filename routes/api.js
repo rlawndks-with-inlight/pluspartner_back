@@ -236,7 +236,6 @@ const sendSms = (req, res) => {
         let receiver = req.body.receiver;
         const content = req.body.content;
         sendAligoSms({ receivers: receiver, message: content }).then((result) => {
-            console.log(result)
             if (result.result_code == '1') {
                 return response(req, res, 100, "success", [])
             } else {
@@ -329,7 +328,6 @@ const checkExistNickname = (req, res) => {
 }
 const changePassword = (req, res) => {
     try {
-        console.log(req.body)
         const id = req.body.id;
         let pw = req.body.pw;
         crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
