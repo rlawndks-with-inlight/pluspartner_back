@@ -274,7 +274,7 @@ const findAuthByIdAndPhone = (req, res) => {
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
                 if (result.length > 0) {
-                    return response(req, res, 100, "success", []);
+                    return response(req, res, 100, "success", result[0]);
                 } else {
                     return response(req, res, -50, "등록되지 않은 회원입니다.", []);
                 }
@@ -322,6 +322,33 @@ const checkExistNickname = (req, res) => {
             }
         })
 
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const changePassword = (req, res) => {
+    try {
+        const id = req.body.id;
+        let pw = req.body.pw;
+        crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+            // bcrypt.hash(pw, salt, async (err, hash) => {
+            let hash = decoded.toString('base64')
+
+            if (err) {
+                console.log(err)
+                response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
+            }
+
+            await db.query("UPDATE user_table SET pw=? WHERE id=?", [hash, id], (err, result) => {
+                if (err) {
+                    console.log(err)
+                    return response(req, res, -200, "서버 에러 발생", [])
+                } else {
+                    return response(req, res, 100, "success", [])
+                }
+            })
+        })
     } catch (e) {
         console.log(e)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -1522,6 +1549,6 @@ module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence,//update
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword,//update
     deleteItem
 };

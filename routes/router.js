@@ -5,7 +5,7 @@ const {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence,//update
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword,//update
     deleteItem
 } = require('./api')
 
@@ -15,6 +15,7 @@ router.post('/findidbyphone', findIdByPhone);
 router.post('/findauthbyidandphone', findAuthByIdAndPhone);
 router.post('/checkexistid', checkExistId);
 router.post('/checkexistnickname', checkExistNickname);
+router.post('/changepassword', changePassword);
 router.post('/adduser', onSignUp);
 router.post('/addmaster', upload.fields([{ name: 'master' }, { name: 'channel' }]), addMaster);
 router.post('/updatemaster', upload.fields([{ name: 'master' }, { name: 'channel' }]), updateMaster);
