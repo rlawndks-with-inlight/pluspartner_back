@@ -235,7 +235,6 @@ const sendSms = (req, res) => {
     try {
         let receiver = req.body.receiver;
         const content = req.body.content;
-        console.log(req.body)
         sendAligoSms({ receivers: receiver, message: content }).then((result) => {
             console.log(result)
             if (result.result_code == '1') {
@@ -251,7 +250,6 @@ const sendSms = (req, res) => {
 }
 const findIdByPhone = (req, res) => {
     try {
-        console.log(req.body)
         const phone = req.body.phone;
         db.query("SELECT pk, id FROM user_table WHERE phone=?", [phone], (err, result) => {
             if (err) {
@@ -259,6 +257,27 @@ const findIdByPhone = (req, res) => {
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
                 return response(req, res, 100, "success", result[0])
+            }
+        })
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const findAuthByIdAndPhone = (req, res) => {
+    try {
+        const id = req.body.id;
+        const phone = req.body.phone;
+        db.query("SELECT * FROM user_table WHERE id=? AND phone=?", [id, phone], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                if (result.length > 0) {
+                    return response(req, res, 100, "success", []);
+                } else {
+                    return response(req, res, -50, "등록되지 않은 회원입니다.", []);
+                }
             }
         })
     } catch (e) {
@@ -1501,7 +1520,7 @@ const changeItemSequence = (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence,//update
     deleteItem
