@@ -188,6 +188,22 @@ const sendSms = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const findIdByPhone = (req, res) => {
+    try {
+        const phone = req.body.phone;
+        db.query("SELECT pk, id FROM user_table WHERE phone=?", [phone], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", result)
+            }
+        })
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const checkExistId = (req, res) => {
     try {
         const id = req.body.id;
@@ -1375,9 +1391,9 @@ const changeItemSequence = (req, res) => {
     try {
         const { pk, table, change_pk } = req.body;
         let date = new Date();
-        date = parseInt(date.getTime()/1000);
+        date = parseInt(date.getTime() / 1000);
 
-        let sql = `UPDATE ${table}_table SET pk=${pk > change_pk?-date:date}, sort=? WHERE pk=?`;
+        let sql = `UPDATE ${table}_table SET pk=${pk > change_pk ? -date : date}, sort=? WHERE pk=?`;
         let settingSql = "";
         let settingPkSql = "";
         let pk_list = [];
@@ -1385,13 +1401,13 @@ const changeItemSequence = (req, res) => {
         let rightPk = [change_pk, pk];
         if (pk > change_pk) {
             settingSql = `UPDATE ${table}_table SET sort=sort+1 WHERE pk < ? AND pk >= ?`;//pk,change
-            settingPkSql = `UPDATE ${table}_table SET pk=sort WHERE (pk <= ? AND pk >= ?) OR pk=${pk > change_pk?-date:date} ORDER BY pk DESC`;
+            settingPkSql = `UPDATE ${table}_table SET pk=sort WHERE (pk <= ? AND pk >= ?) OR pk=${pk > change_pk ? -date : date} ORDER BY pk DESC`;
             pk_list = leftPk;
         } else if (change_pk > pk) {
             settingSql = `UPDATE ${table}_table SET sort=sort-1 WHERE pk > ? AND pk <= ?`;
-            settingPkSql = `UPDATE ${table}_table SET pk=sort WHERE (pk <= ? AND pk >= ?) OR pk=${pk > change_pk?-date:date} ORDER BY pk ASC`;
+            settingPkSql = `UPDATE ${table}_table SET pk=sort WHERE (pk <= ? AND pk >= ?) OR pk=${pk > change_pk ? -date : date} ORDER BY pk ASC`;
             pk_list = rightPk;
-        }else{
+        } else {
             return response(req, res, -100, "둘의 값이 같습니다.", [])
         }
         db.query(sql, [change_pk, pk], async (err, result) => {
@@ -1423,7 +1439,7 @@ const changeItemSequence = (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence,//update
     deleteItem
