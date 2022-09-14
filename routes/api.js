@@ -190,6 +190,7 @@ const sendSms = (req, res) => {
 }
 const findIdByPhone = (req, res) => {
     try {
+        console.log(req.body)
         const phone = req.body.phone;
         db.query("SELECT pk, id FROM user_table WHERE phone=?", [phone], (err, result) => {
             if (err) {
