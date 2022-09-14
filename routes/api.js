@@ -197,7 +197,7 @@ const findIdByPhone = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                return response(req, res, 100, "success", result)
+                return response(req, res, 100, "success", result[0])
             }
         })
     } catch (e) {
