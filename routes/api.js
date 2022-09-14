@@ -329,6 +329,7 @@ const checkExistNickname = (req, res) => {
 }
 const changePassword = (req, res) => {
     try {
+        console.log(req.body)
         const id = req.body.id;
         let pw = req.body.pw;
         crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
