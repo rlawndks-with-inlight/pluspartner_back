@@ -31,7 +31,10 @@ const pwBytes = 64
 const jwtSecret = "djfudnsqlalfKeyFmfRkwu"
 
 const geolocation = require('geolocation')
-
+const kakaoOpt = {
+    clientId: '4a8d167fa07331905094e19aafb2dc47',
+    redirectUri: 'http://172.30.1.19:8001/api/kakao/callback',
+};
 router.get('/', (req, res) => {
     console.log("back-end initialized")
     res.send('back-end initialized')
@@ -157,6 +160,64 @@ const onLoginByPhone = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+
+const kakaoCallBack = (req, res) => {
+    try {
+        const token = req.body.token;
+        const brand_name = req.body.brand;
+        async function kakaoLogin() {
+            let tmp;
+
+            try {
+                const url = 'https://kapi.kakao.com/v2/user/me';
+                const Header = {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                };
+                tmp = await axios.get(url, Header);
+            } catch (e) {
+                console.log(e);
+                response(req, res, -200, "서버 에러 발생", [])
+            }
+
+            try {
+                const { data } = tmp;
+                const { id, properties } = data;
+                await db.query("SELECT * FROM user_table WHERE id=?", [id], async (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        response(req, res, -100, "서버 에러 발생", [])
+                    } else {
+                        if (result.length > 0) {
+                            if (err) {
+                                console.log(err);
+                                response(req, res, -100, "서버 에러 발생", [])
+                            } else {
+                                response(req, res, 100, "기존유저", { phone: result[0]?.phone ?? "", pk: result[0]?.pk ?? 0 })
+                            }
+
+                        } else {
+                            response(req, res, 100, "신규유저", { id: id })
+                        }
+                    }
+                })
+            } catch (e) {
+                console.log(e);
+                response(req, res, -100, "서버 에러 발생", [])
+            }
+
+        }
+        kakaoLogin();
+
+    } catch (err) {
+        console.log(err)
+        response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+
+
+
 const sendAligoSms = ({ receivers, message }) => {
     return axios.post('https://apis.aligo.in/send/', null, {
         params: {
@@ -1439,7 +1500,7 @@ const changeItemSequence = (req, res) => {
     }
 }
 module.exports = {
-    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms,//auth
+    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence,//update
