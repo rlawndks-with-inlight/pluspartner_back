@@ -163,7 +163,7 @@ const onLoginByPhone = (req, res) => {
 const uploadProfile = (req, res) => {
     try {
         const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
-        const id = rq.body.id;
+        const id = req.body.id;
         db.query('UPDATE user_table SET profile_img=? WHERE id=?',[image,id],(err, result)=>{
             if (err) {
                 console.log(err)
