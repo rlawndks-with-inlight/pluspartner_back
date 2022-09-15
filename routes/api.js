@@ -53,7 +53,7 @@ const onSignUp = async (req, res) => {
         const nickname = req.body.nickname ?? "";
         const phone = req.body.phone ?? "";
         const user_level = req.body.user_level ?? 0;
-        const type_num = req.body.type_num??0;
+        const type_num = req.body.type_num ?? 0;
         //중복 체크 
         let sql = "SELECT * FROM user_table WHERE id=?"
 
@@ -71,7 +71,7 @@ const onSignUp = async (req, res) => {
                     }
 
                     sql = 'INSERT INTO user_table (id, pw, name, nickname , phone, user_level, type) VALUES (?, ?, ?, ?, ?, ?, ?)'
-                    await db.query(sql, [id, hash, name, nickname, phone, user_level,type_num], async (err, result) => {
+                    await db.query(sql, [id, hash, name, nickname, phone, user_level, type_num], async (err, result) => {
 
                         if (err) {
                             console.log(err)
@@ -156,14 +156,14 @@ const onLoginById = async (req, res) => {
 const onLoginBySns = (req, res) => {
     try {
         console.log(req.body)
-        const {id, typeNum} = req.body;
+        const { id, typeNum } = req.body;
 
-        db.query("SELECT * FROM user_table WHERE id=? type=?",[id, typeNum],(err, result)=>{
+        db.query("SELECT * FROM user_table WHERE id=? type=?", [id, typeNum], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                if(result.length>0){//기존유저
+                if (result.length > 0) {//기존유저
                     const token = jwt.sign({
                         pk: result[0].pk,
                         nickname: result[0].nickname,
@@ -184,7 +184,7 @@ const onLoginBySns = (req, res) => {
                         }
                     })
                     return response(req, res, 200, result[0].nickname + ' 님 환영합니다.', result[0]);
-                }else{//신규유저
+                } else {//신규유저
                     return response(req, res, 50, "신규유저 입니다.", [])
                 }
             }
