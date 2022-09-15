@@ -159,7 +159,7 @@ const onLoginBySns = (req, res) => {
         console.log(req.body)
         let { id, typeNum } = req.body;
 
-        db.query("SELECT * FROM user_table WHERE id=? type=?", [id, typeNum], (err, result) => {
+        db.query("SELECT * FROM user_table WHERE id=? AND type=?", [id, typeNum], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
