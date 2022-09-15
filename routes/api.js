@@ -223,7 +223,6 @@ const onLoginBySns = (req, res) => {
                             })
                         }
                     })
-                    return response(req, res, 50, "신규유저 입니다.", [])
                 }
             }
         })
