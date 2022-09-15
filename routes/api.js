@@ -201,7 +201,7 @@ const onLoginBySns = (req, res) => {
                                         pk: result2?.insertId,
                                         nickname: nickname,
                                         id: id,
-                                        user_level: 0,
+                                        user_level: user_level,
                                         phone: phone
                                     },
                                         jwtSecret,
@@ -210,7 +210,7 @@ const onLoginBySns = (req, res) => {
                                             issuer: 'fori',
                                         });
                                     res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
-                                    db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result2?.insertId], (err, result) => {
+                                    await db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result2?.insertId], (err, result) => {
                                         if (err) {
                                             console.log(err)
                                             return response(req, res, -200, "서버 에러 발생", [])
