@@ -157,8 +157,7 @@ const onLoginById = async (req, res) => {
 const onLoginBySns = (req, res) => {
     try {
         console.log(req.body)
-        let { id, typeNum, name, nickname, phone, user_level } = req.body;
-
+        let { id, typeNum, name, nickname, phone, user_level, profile_img } = req.body;
         db.query("SELECT * FROM user_table WHERE id=? AND type=?", [id, typeNum], async(err, result) => {
             if (err) {
                 console.log(err)
@@ -178,7 +177,7 @@ const onLoginBySns = (req, res) => {
                             issuer: 'fori',
                         });
                     res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
-                    db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result[0].pk], (err, result) => {
+                    await db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result[0].pk], (err, result) => {
                         if (err) {
                             console.log(err)
                             return response(req, res, -200, "서버 에러 발생", [])
@@ -186,7 +185,7 @@ const onLoginBySns = (req, res) => {
                     })
                     return response(req, res, 200, result[0].nickname + ' 님 환영합니다.', result[0]);
                 } else {//신규유저
-                    db.query("INSERT INTO user_table (id, name, nickname , phone, user_level, type) VALUES (?,  ?, ?, ?, ?, ?)",[id, name,nickname,phone,user_level,typeNum],async(err, result2)=>{
+                    await db.query("INSERT INTO user_table (id, name, nickname , phone, user_level, type,profile_img) VALUES (?,  ?, ?, ?, ?, ?, ?)",[id, name,nickname,phone,user_level,typeNum, profile_img],async(err, result2)=>{
                         if (err) {
                             console.log(err)
                             return response(req, res, -200, "서버 에러 발생", [])
@@ -216,7 +215,7 @@ const onLoginBySns = (req, res) => {
                                             return response(req, res, -200, "서버 에러 발생", [])
                                         }
                                     })
-                                    return response(req, res, 200, nickname + ' 님 환영합니다.', { pk:result2?.insertId, id, typeNum, name, nickname, phone, user_level });
+                                    return response(req, res, 200, nickname + ' 님 환영합니다.', { pk:result2?.insertId, id, typeNum, name, nickname, phone, user_level, profile_img });
                                 }
                             })
                         }
