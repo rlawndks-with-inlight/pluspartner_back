@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { upload } = require('../config/multerConfig')
 const {
-    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile,//auth
+    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword,//update
@@ -25,6 +25,7 @@ router.post('/addchannel', upload.single('channel'), addChannel);
 router.post('/updatechannel', upload.single('channel'), updateChannel);
 router.get('/getchannel', getChannelList);
 router.post('/loginbyid', onLoginById);
+router.post('/loginbysns', onLoginBySns);
 router.post('/logout', onLogout);
 router.get('/auth', getUserToken);
 router.get('/users', getUsers);

@@ -53,6 +53,7 @@ const onSignUp = async (req, res) => {
         const nickname = req.body.nickname ?? "";
         const phone = req.body.phone ?? "";
         const user_level = req.body.user_level ?? 0;
+        const type_num = req.body.type_num??0;
         //중복 체크 
         let sql = "SELECT * FROM user_table WHERE id=?"
 
@@ -69,8 +70,8 @@ const onSignUp = async (req, res) => {
                         response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
                     }
 
-                    sql = 'INSERT INTO user_table (id, pw, name, nickname , phone, user_level) VALUES (?, ?, ?, ?, ?, ?)'
-                    await db.query(sql, [id, hash, name, nickname, phone, user_level], async (err, result) => {
+                    sql = 'INSERT INTO user_table (id, pw, name, nickname , phone, user_level, type) VALUES (?, ?, ?, ?, ?, ?, ?)'
+                    await db.query(sql, [id, hash, name, nickname, phone, user_level,type_num], async (err, result) => {
 
                         if (err) {
                             console.log(err)
@@ -152,6 +153,46 @@ const onLoginById = async (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const onLoginBySns = (req, res) => {
+    try {
+        const {id, typeNum} = req.body;
+
+        db.query("SELECT * FROM user_table WHERE id=? type=?",[id, typeNum],(err, result)=>{
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                if(result.length>0){//기존유저
+                    const token = jwt.sign({
+                        pk: result[0].pk,
+                        nickname: result[0].nickname,
+                        id: result[0].id,
+                        user_level: result[0].user_level,
+                        phone: result[0].phone
+                    },
+                        jwtSecret,
+                        {
+                            expiresIn: '600m',
+                            issuer: 'fori',
+                        });
+                    res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
+                    db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result[0].pk], (err, result) => {
+                        if (err) {
+                            console.log(err)
+                            return response(req, res, -200, "서버 에러 발생", [])
+                        }
+                    })
+                    return response(req, res, 200, result[0].nickname + ' 님 환영합니다.', result[0]);
+                }else{//신규유저
+                    return response(req, res, 50, "신규유저 입니다.", [])
+                }
+            }
+        })
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const onLoginByPhone = (req, res) => {
     try {
 
@@ -164,11 +205,11 @@ const uploadProfile = (req, res) => {
     try {
         const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
         const id = req.body.id;
-        db.query('UPDATE user_table SET profile_img=? WHERE id=?',[image,id],(err, result)=>{
+        db.query('UPDATE user_table SET profile_img=? WHERE id=?', [image, id], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
-            }else{
+            } else {
                 return response(req, res, 100, "success", [])
             }
         })
@@ -1648,7 +1689,7 @@ const changeItemSequence = (req, res) => {
     }
 }
 module.exports = {
-    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile,//auth
+    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword,//update
