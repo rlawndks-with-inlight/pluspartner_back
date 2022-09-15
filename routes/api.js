@@ -216,7 +216,7 @@ const onLoginBySns = (req, res) => {
                                             return response(req, res, -200, "서버 에러 발생", [])
                                         }
                                     })
-                                    return response(req, res, 200, nickname + ' 님 환영합니다.', []);
+                                    return response(req, res, 200, nickname + ' 님 환영합니다.', { pk:result2?.insertId, id, typeNum, name, nickname, phone, user_level });
                                 }
                             })
                         }
