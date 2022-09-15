@@ -119,7 +119,8 @@ const onLoginById = async (req, res) => {
                                     nickname: result1[0].nickname,
                                     id: result1[0].id,
                                     user_level: result1[0].user_level,
-                                    phone: result1[0].phone
+                                    phone: result1[0].phone,
+                                    profile_img:result1[0].profile_img
                                 },
                                     jwtSecret,
                                     {
@@ -544,8 +545,8 @@ const getUserToken = (req, res) => {
             let nickname = decode.nickname;
             let phone = decode.phone;
             let level = decode.user_level;
-
-            res.send({ id, pk, nickname, phone, level })
+            let profile_img = decode.profile_img;
+            res.send({ id, pk, nickname, phone, level, profile_img })
         }
         else {
             res.send({
