@@ -211,8 +211,8 @@ const onLoginBySns = (req, res) => {
                                             expiresIn: '600m',
                                             issuer: 'fori',
                                         });
-                                    await res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
-                                    await db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result2?.insertId], (err, result) => {
+                                    res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
+                                    db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result2?.insertId], (err, result) => {
                                         if (err) {
                                             console.log(err)
                                             return response(req, res, -200, "서버 에러 발생", [])
