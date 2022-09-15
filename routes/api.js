@@ -169,7 +169,8 @@ const onLoginBySns = (req, res) => {
                         nickname: result[0].nickname,
                         id: result[0].id,
                         user_level: result[0].user_level,
-                        phone: result[0].phone
+                        phone: result[0].phone,
+                        profile_img:result[0].profile_img
                     },
                         jwtSecret,
                         {
@@ -201,7 +202,8 @@ const onLoginBySns = (req, res) => {
                                         nickname: nickname,
                                         id: id,
                                         user_level: user_level,
-                                        phone: phone
+                                        phone: phone,
+                                        profile_img:profile_img
                                     },
                                         jwtSecret,
                                         {
