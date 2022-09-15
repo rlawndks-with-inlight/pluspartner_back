@@ -156,7 +156,7 @@ const onLoginById = async (req, res) => {
 const onLoginBySns = (req, res) => {
     try {
         console.log(req.body)
-        const { id, typeNum } = req.body;
+        let { id, typeNum } = req.body;
 
         db.query("SELECT * FROM user_table WHERE id=? type=?", [id, typeNum], (err, result) => {
             if (err) {
