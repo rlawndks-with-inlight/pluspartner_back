@@ -211,7 +211,7 @@ const onLoginBySns = (req, res) => {
                                             expiresIn: '600m',
                                             issuer: 'fori',
                                         });
-                                    res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
+                                    await res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
                                     await db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result2?.insertId], (err, result) => {
                                         if (err) {
                                             console.log(err)
