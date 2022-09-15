@@ -157,15 +157,15 @@ const onLoginById = async (req, res) => {
 const onLoginBySns = (req, res) => {
     try {
         console.log(req.body)
-        let { id, typeNum } = req.body;
+        let { id, typeNum, name, nickname, phone, user_level } = req.body;
 
-        db.query("SELECT * FROM user_table WHERE id=? AND type=?", [id, typeNum], (err, result) => {
+        db.query("SELECT * FROM user_table WHERE id=? AND type=?", [id, typeNum], async(err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
                 if (result.length > 0) {//기존유저
-                    const token = jwt.sign({
+                    let token = jwt.sign({
                         pk: result[0].pk,
                         nickname: result[0].nickname,
                         id: result[0].id,
@@ -186,6 +186,41 @@ const onLoginBySns = (req, res) => {
                     })
                     return response(req, res, 200, result[0].nickname + ' 님 환영합니다.', result[0]);
                 } else {//신규유저
+                    db.query("INSERT INTO user_table (id, name, nickname , phone, user_level, type) VALUES (?,  ?, ?, ?, ?, ?)",[id, name,nickname,phone,user_level,typeNum],async(err, result2)=>{
+                        if (err) {
+                            console.log(err)
+                            return response(req, res, -200, "서버 에러 발생", [])
+                        }else{
+                            await db.query("UPDATE user_table SET sort=? WHERE pk=?", [result2?.insertId, result2?.insertId], async(err, resultup) => {
+                                if (err) {
+                                    console.log(err)
+                                    response(req, res, -200, "회원 추가 실패", [])
+                                }
+                                else {
+                                    let token = jwt.sign({
+                                        pk: result2?.insertId,
+                                        nickname: nickname,
+                                        id: id,
+                                        user_level: 0,
+                                        phone: phone
+                                    },
+                                        jwtSecret,
+                                        {
+                                            expiresIn: '600m',
+                                            issuer: 'fori',
+                                        });
+                                    res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
+                                    db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result2?.insertId], (err, result) => {
+                                        if (err) {
+                                            console.log(err)
+                                            return response(req, res, -200, "서버 에러 발생", [])
+                                        }
+                                    })
+                                    return response(req, res, 200, nickname + ' 님 환영합니다.', []);
+                                }
+                            })
+                        }
+                    })
                     return response(req, res, 50, "신규유저 입니다.", [])
                 }
             }
