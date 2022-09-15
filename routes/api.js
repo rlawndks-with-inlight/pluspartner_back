@@ -101,6 +101,7 @@ const onSignUp = async (req, res) => {
 }
 const onLoginById = async (req, res) => {
     try {
+        console.log(req.body)
         let { id, pw } = req.body;
         db.query('SELECT * FROM user_table WHERE id=?', [id], async (err, result1) => {
             if (err) {
