@@ -15,10 +15,10 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const { checkLevel, logRequestResponse, isNotNullOrUndefined, namingImagesPath, nullResponse, lowLevelResponse, response } = require('./util')
 
-app.use(bodyParser.json({limit:'100mb'})); 
-app.use(bodyParser.urlencoded({extended:true, limit:'100mb'})); 
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
 //multer
-const {upload} = require('./config/multerConfig')
+const { upload } = require('./config/multerConfig')
 
 //express
 app.use(express.json());
@@ -37,78 +37,27 @@ app.use('/image', express.static(__dirname + '/image'));
 app.use('/api', require('./routes/router'))
 
 app.get('/', (req, res) => {
-    console.log("back-end initialized")
-    res.send('back-end initialized')
+        console.log("back-end initialized")
+        res.send('back-end initialized')
 });
-const HTTP_PORT = 8001; const HTTPS_PORT = 8443; 
-//const options = { key: fs.readFileSync('../ssl/cert.key'), cert: fs.readFileSync('../ssl/cert.crt') };
+const HTTP_PORT = 8001;
+const HTTPS_PORT = 8443;
 
-app.post('/api/addad', upload.single('image'), (req, res) =>{
-        try{
-                
-                if(checkLevel(req.cookies.token, 40))
-                {
-                        
-                        const sql = 'INSERT INTO ad_table  (title, image_src) VALUES (? , ?)'
-                        const title = req.body.title
-                        const {image, isNull} = namingImagesPath("ad", req.file)
-                        const param = [title, image]
-                        console.log(req.file)        
-                                db.query(sql, param, (err, rows, feild)=>{
-                                        if (err) {
-                                                
-                                                console.log(err)
-                                                response(req, res, -200, "광고 추가 실패", [])
-                                        }
-                                        else {
-                                                
-                                                response(req, res, 200, "광고 추가 성공", [])
-                                        }
-                                })
-                }
-                else
-                        lowLevelResponse(req, res)
-        }
-        catch(err)
-        {
-        console.log(err)
-        response(req, res, -200, "서버 에러 발생", [])
-        }
-})
-//가게 사진 추가
-app.post('/api/addimage', upload.single('image'), (req, res) =>{
-        try{
-                
-                if(checkLevel(req.cookies.token, 40))
-                {
-                        
-                        const sql = 'INSERT INTO image_table (shop_pk, image_src) VALUES (? , ?)'
-                        const pk = req.body.pk
-                        const {image, isNull} = namingImagesPath("ad", req.file)
-                        const param = [pk, image]
-                        
-                        console.log(req.file)  
-                                
-                                db.query(sql, param, (err, rows, feild)=>{
-                                        if (err) {
-                                                
-                                                console.log(err)
-                                                response(req, res, -200, "이미지 추가 실패", [])
-                                        }
-                                        else {
-                                                
-                                                response(req, res, 200, "이미지 추가 성공", [])
-                                        }
-                                })
-                }
-                else
-                        lowLevelResponse(req, res)
-        }
-        catch(err)
-        {
-        console.log(err)
-        response(req, res, -200, "서버 에러 발생", [])
-        }
-})
-http.createServer(app).listen(HTTP_PORT,console.log("Server on "+HTTP_PORT)); 
+// const options = { // letsencrypt로 받은 인증서 경로를 입력해 줍니다.
+//         ca: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/fullchain.pem"),
+//         key: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/privkey.pem"),
+//         cert: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/cert.pem")
+// };
+
+// Default route for server status
+app.get('/', (req, res) => {
+        res.json({ message: `Server is running on port ${req.secure ? HTTPS_PORT : HTTP_PORT}` });
+});
+
+// Create an HTTP server.
+http.createServer(app).listen(HTTP_PORT), console.log("Server on " + HTTP_PORT);
+
+// Create an HTTPS server.
+//https.createServer(options, app).listen(HTTPS_PORT, console.log("Server on " + HTTPS_PORT));
+
 //https.createServer(options, app).listen(HTTPS_PORT);

@@ -120,7 +120,7 @@ const onLoginById = async (req, res) => {
                                     id: result1[0].id,
                                     user_level: result1[0].user_level,
                                     phone: result1[0].phone,
-                                    profile_img:result1[0].profile_img
+                                    profile_img: result1[0].profile_img
                                 },
                                     jwtSecret,
                                     {
@@ -159,7 +159,7 @@ const onLoginBySns = (req, res) => {
     try {
         console.log(req.body)
         let { id, typeNum, name, nickname, phone, user_level, profile_img } = req.body;
-        db.query("SELECT * FROM user_table WHERE id=? AND type=?", [id, typeNum], async(err, result) => {
+        db.query("SELECT * FROM user_table WHERE id=? AND type=?", [id, typeNum], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -171,7 +171,7 @@ const onLoginBySns = (req, res) => {
                         id: result[0].id,
                         user_level: result[0].user_level,
                         phone: result[0].phone,
-                        profile_img:result[0].profile_img
+                        profile_img: result[0].profile_img
                     },
                         jwtSecret,
                         {
@@ -187,12 +187,12 @@ const onLoginBySns = (req, res) => {
                     })
                     return response(req, res, 200, result[0].nickname + ' 님 환영합니다.', result[0]);
                 } else {//신규유저
-                    await db.query("INSERT INTO user_table (id, name, nickname , phone, user_level, type,profile_img) VALUES (?,  ?, ?, ?, ?, ?, ?)",[id, name,nickname,phone,user_level,typeNum, profile_img],async(err, result2)=>{
+                    await db.query("INSERT INTO user_table (id, name, nickname , phone, user_level, type,profile_img) VALUES (?,  ?, ?, ?, ?, ?, ?)", [id, name, nickname, phone, user_level, typeNum, profile_img], async (err, result2) => {
                         if (err) {
                             console.log(err)
                             return response(req, res, -200, "서버 에러 발생", [])
-                        }else{
-                            await db.query("UPDATE user_table SET sort=? WHERE pk=?", [result2?.insertId, result2?.insertId], async(err, resultup) => {
+                        } else {
+                            await db.query("UPDATE user_table SET sort=? WHERE pk=?", [result2?.insertId, result2?.insertId], async (err, resultup) => {
                                 if (err) {
                                     console.log(err)
                                     response(req, res, -200, "회원 추가 실패", [])
@@ -204,7 +204,7 @@ const onLoginBySns = (req, res) => {
                                         id: id,
                                         user_level: user_level,
                                         phone: phone,
-                                        profile_img:profile_img
+                                        profile_img: profile_img
                                     },
                                         jwtSecret,
                                         {
@@ -218,7 +218,7 @@ const onLoginBySns = (req, res) => {
                                             return response(req, res, -200, "서버 에러 발생", [])
                                         }
                                     })
-                                    return response(req, res, 200, nickname + ' 님 환영합니다.', { pk:result2?.insertId, id, typeNum, name, nickname, phone, user_level, profile_img });
+                                    return response(req, res, 200, nickname + ' 님 환영합니다.', { pk: result2?.insertId, id, typeNum, name, nickname, phone, user_level, profile_img });
                                 }
                             })
                         }
@@ -582,7 +582,7 @@ const getUsers = (req, res) => {
             page_cut = 15
         }
         pageSql = pageSql + whereStr;
-        sql = sql + whereStr + " ORDER BY pk DESC ";
+        sql = sql + whereStr + " ORDER BY sort DESC ";
         if (req.query.page) {
             sql += ` LIMIT ${(req.query.page - 1) * page_cut}, ${page_cut}`;
             db.query(pageSql, async (err, result1) => {
@@ -832,37 +832,37 @@ const getHomeContent = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                await db.query('SELECT * FROM user_table WHERE user_level=30 ORDER BY pk DESC', async (err, result0) => {
+                await db.query('SELECT * FROM user_table WHERE user_level=30 ORDER BY sort DESC', async (err, result0) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        await db.query('SELECT pk, title, hash FROM oneword_table WHERE status=1 ORDER BY pk DESC LIMIT 1', async (err, result1) => {
+                        await db.query('SELECT pk, title, hash FROM oneword_table WHERE status=1 ORDER BY sort DESC LIMIT 1', async (err, result1) => {
                             if (err) {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
                             } else {
-                                await db.query('SELECT pk, title, hash FROM oneevent_table WHERE status=1 ORDER BY pk DESC LIMIT 1', async (err, result2) => {
+                                await db.query('SELECT pk, title, hash FROM oneevent_table WHERE status=1 ORDER BY sort DESC LIMIT 1', async (err, result2) => {
                                     if (err) {
                                         console.log(err)
                                         return response(req, res, -200, "서버 에러 발생", [])
                                     } else {
-                                        await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result3) => {
+                                        await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result3) => {
                                             if (err) {
                                                 console.log(err)
                                                 return response(req, res, -200, "서버 에러 발생", [])
                                             } else {
-                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result4) => {
+                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result4) => {
                                                     if (err) {
                                                         console.log(err)
                                                         return response(req, res, -200, "서버 에러 발생", [])
                                                     } else {
-                                                        await db.query('SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 ORDER BY pk DESC LIMIT 5', async (err, result5) => {
+                                                        await db.query('SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result5) => {
                                                             if (err) {
                                                                 console.log(err)
                                                                 return response(req, res, -200, "서버 에러 발생", [])
                                                             } else {
-                                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM strategy_table WHERE status=1 ORDER BY pk DESC LIMIT 3', async (err, result6) => {
+                                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM strategy_table WHERE status=1 ORDER BY sort DESC LIMIT 3', async (err, result6) => {
                                                                     if (err) {
                                                                         console.log(err)
                                                                         return response(req, res, -200, "서버 에러 발생", [])
@@ -940,7 +940,7 @@ const getVideoContent = (req, res) => {
         const pk = req.query.pk;
         let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;//비디오 정보
         let sql2 = `SELECT video_relate_table.*, video_table.* FROM video_relate_table LEFT JOIN video_table ON video_relate_table.relate_video_pk = video_table.pk WHERE video_relate_table.video_pk=? `//관련영상
-        let sql3 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY pk DESC LIMIT 5`;//최신영상
+        let sql3 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY sort DESC LIMIT 5`;//최신영상
         if (req.query.views) {
             db.query("UPDATE video_table SET views=views+1 WHERE pk=?", [pk], (err, result_view) => {
                 if (err) {
@@ -1413,32 +1413,32 @@ const onSearchAllItem = (req, res) => {
     try {
         let keyword = req.query.keyword;
         let sql = `SELECT pk, title, `
-        db.query(`SELECT pk, title, hash FROM oneword_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result1) => {
+        db.query(`SELECT pk, title, hash FROM oneword_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result1) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                await db.query(`SELECT pk, title, hash FROM oneevent_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result2) => {
+                await db.query(`SELECT pk, title, hash FROM oneevent_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result2) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result3) => {
+                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result3) => {
                             if (err) {
                                 console.log(err)
                                 return response(req, res, -200, "서버 에러 발생", [])
                             } else {
-                                await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result4) => {
+                                await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result4) => {
                                     if (err) {
                                         console.log(err)
                                         return response(req, res, -200, "서버 에러 발생", [])
                                     } else {
-                                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result5) => {
+                                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result5) => {
                                             if (err) {
                                                 console.log(err)
                                                 return response(req, res, -200, "서버 에러 발생", [])
                                             } else {
-                                                await db.query(`SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 AND (title LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY pk DESC LIMIT 8`, async (err, result6) => {
+                                                await db.query(`SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 AND (title LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result6) => {
                                                     if (err) {
                                                         console.log(err)
                                                         return response(req, res, -200, "서버 에러 발생", [])
@@ -1465,7 +1465,7 @@ const onSearchAllItem = (req, res) => {
 }
 const getOneWord = (req, res) => {
     try {
-        db.query("SELECT * FROM oneword_table ORDER BY pk DESC LIMIT 1", (err, result) => {
+        db.query("SELECT * FROM oneword_table ORDER BY sort DESC LIMIT 1", (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -1480,7 +1480,7 @@ const getOneWord = (req, res) => {
 }
 const getOneEvent = (req, res) => {
     try {
-        db.query("SELECT * FROM oneevent_table ORDER BY pk DESC LIMIT 1", (err, result) => {
+        db.query("SELECT * FROM oneevent_table ORDER BY sort DESC LIMIT 1", (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -1520,7 +1520,7 @@ const getItems = (req, res) => {
             page_cut = 15;
         }
         pageSql = pageSql + whereStr;
-        sql = sql + whereStr + " ORDER BY pk DESC ";
+        sql = sql + whereStr + " ORDER BY sort DESC ";
         if (limit && !page) {
             sql += ` LIMIT ${limit} `;
         }
@@ -1646,6 +1646,7 @@ const updateStatus = (req, res) => {
 
 const onTheTopItem = (req, res) => {
     try {
+        console.log(req.body)
         const { table, pk } = req.body;
         db.query(`SHOW TABLE STATUS LIKE '${table}_table' `, async (err, result1) => {
             if (err) {
@@ -1653,7 +1654,7 @@ const onTheTopItem = (req, res) => {
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
                 let ai = result1[0].Auto_increment;
-                await db.query(`UPDATE ${table}_table SET pk=?, sort=? WHERE pk=? `, [ai, ai, pk], async (err, result2) => {
+                await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=? `, [ai, pk], async (err, result2) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
@@ -1670,7 +1671,6 @@ const onTheTopItem = (req, res) => {
                 })
             }
         })
-        console.log(req.body)
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -1678,45 +1678,31 @@ const onTheTopItem = (req, res) => {
 }
 const changeItemSequence = (req, res) => {
     try {
-        const { pk, table, change_pk } = req.body;
+        console.log(req.body)
+        const { pk, sort, table, change_pk, change_sort } = req.body;
         let date = new Date();
         date = parseInt(date.getTime() / 1000);
 
-        let sql = `UPDATE ${table}_table SET pk=${pk > change_pk ? -date : date}, sort=? WHERE pk=?`;
+        let sql = `UPDATE ${table}_table SET sort=${change_sort} WHERE pk=?`;
         let settingSql = "";
-        let settingPkSql = "";
-        let pk_list = [];
-        let leftPk = [pk, change_pk];
-        let rightPk = [change_pk, pk];
-        if (pk > change_pk) {
-            settingSql = `UPDATE ${table}_table SET sort=sort+1 WHERE pk < ? AND pk >= ?`;//pk,change
-            settingPkSql = `UPDATE ${table}_table SET pk=sort WHERE (pk <= ? AND pk >= ?) OR pk=${pk > change_pk ? -date : date} ORDER BY pk DESC`;
-            pk_list = leftPk;
-        } else if (change_pk > pk) {
-            settingSql = `UPDATE ${table}_table SET sort=sort-1 WHERE pk > ? AND pk <= ?`;
-            settingPkSql = `UPDATE ${table}_table SET pk=sort WHERE (pk <= ? AND pk >= ?) OR pk=${pk > change_pk ? -date : date} ORDER BY pk ASC`;
-            pk_list = rightPk;
+        if (sort > change_sort) {
+            settingSql = `UPDATE ${table}_table SET sort=sort+1 WHERE sort < ? AND sort >= ? AND pk!=? `;
+        } else if (change_sort > sort) {
+            settingSql = `UPDATE ${table}_table SET sort=sort-1 WHERE sort > ? AND sort <= ? AND pk!=? `;
         } else {
             return response(req, res, -100, "둘의 값이 같습니다.", [])
         }
-        db.query(sql, [change_pk, pk], async (err, result) => {
+        db.query(sql, [pk], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                await db.query(settingSql, [pk, change_pk], async (err, result) => {
+                await db.query(settingSql, [sort, change_sort, pk], async (err, result) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
                     } else {
-                        await db.query(settingPkSql, pk_list, async (err, result) => {
-                            if (err) {
-                                console.log(err)
-                                return response(req, res, -200, "서버 에러 발생", [])
-                            } else {
-                                return response(req, res, 100, "success", [])
-                            }
-                        })
+                        return response(req, res, 100, "success", [])
                     }
                 })
             }
