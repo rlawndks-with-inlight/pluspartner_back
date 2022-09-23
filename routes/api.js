@@ -984,7 +984,17 @@ const getVideoContent = (req, res) => {
 const getComments = (req, res) => {
     try {
         const { pk, category} = req.query;
-        db.query("SELECT comment_table.*, user_table.nickname, user_table.profile_img FROM comment_table LEFT JOIN user_table ON comment_table.user_pk = user_table.pk WHERE comment_table.item_pk=? AND comment_table.category_pk=? ORDER BY pk ASC",[pk, category],(err, result)=>{
+        let zColumn = [];
+        let columns = ""
+        if(pk){
+            zColumn.push(pk)
+            columns += " AND comment_table.item_pk=? ";
+        }
+        if(category){
+            zColumn.push(category)
+            columns += " AND comment_table.category_pk=? ";
+        }
+        db.query(`SELECT comment_table.*, user_table.nickname, user_table.profile_img FROM comment_table LEFT JOIN user_table ON comment_table.user_pk = user_table.pk WHERE 1=1 ${columns} ORDER BY pk ASC`,zColumn,(err, result)=>{
             if (err) {
                 console.log(err)
                 response(req, res, -200, "fail", [])
