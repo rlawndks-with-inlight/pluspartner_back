@@ -33,16 +33,35 @@ const formatPhoneNumber = (input) => {
     const cleanInput = input.replaceAll(/[^0-9]/g, "");
     let result = "";
     const length = cleanInput.length;
-    if(length === 8) {
+    if (length === 8) {
         result = cleanInput.replace(/(\d{4})(\d{4})/, '$1-$2');
-    } else if(cleanInput.startsWith("02") && (length === 9 || length === 10)) {
+    } else if (cleanInput.startsWith("02") && (length === 9 || length === 10)) {
         result = cleanInput.replace(/(\d{2})(\d{3,4})(\d{4})/, '$1-$2-$3');
-    } else if(!cleanInput.startsWith("02") && (length === 10 || length === 11)) {
+    } else if (!cleanInput.startsWith("02") && (length === 10 || length === 11)) {
         result = cleanInput.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
     } else {
         result = undefined;
     }
     return result;
+}
+const categoryToNumber = (str) => {
+    if (str == 'oneword') {
+        return 0;
+    } else if (str == 'oneevent') {
+        return 1;
+    } else if (str == 'theme') {
+        return 2;
+    } else if (str == 'strategy') {
+        return 3;
+    } else if (str == 'issue') {
+        return 4;
+    } else if (str == 'feature') {
+        return 5;
+    } else if (str == 'video') {
+        return 6;
+    } else {
+        return -1;
+    }
 }
 const lowLevelException = {
     code: 403,
@@ -229,5 +248,5 @@ module.exports = {
     logRequestResponse, logResponse, logRequest,
     getUserPKArrStrWithNewPK, isNotNullOrUndefined,
     namingImagesPath, getSQLnParams,
-    nullResponse, lowLevelResponse, response, removeItems, returnMoment,formatPhoneNumber
+    nullResponse, lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber
 }

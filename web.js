@@ -14,12 +14,10 @@ require('dotenv').config()
 //passport, jwt
 const jwt = require('jsonwebtoken')
 const { checkLevel, logRequestResponse, isNotNullOrUndefined, namingImagesPath, nullResponse, lowLevelResponse, response } = require('./util')
-
 app.use(bodyParser.json({ limit: '100mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
 //multer
 const { upload } = require('./config/multerConfig')
-
 //express
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -40,24 +38,29 @@ app.get('/', (req, res) => {
         console.log("back-end initialized")
         res.send('back-end initialized')
 });
+const is_test = true;
+
 const HTTP_PORT = 8001;
 const HTTPS_PORT = 8443;
 
-// const options = { // letsencrypt로 받은 인증서 경로를 입력해 줍니다.
-//         ca: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/fullchain.pem"),
-//         key: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/privkey.pem"),
-//         cert: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/cert.pem")
-// };
+if (is_test) {
+        http.createServer(app).listen(HTTP_PORT), console.log("Server on " + HTTP_PORT);
+
+} else {
+        const options = { // letsencrypt로 받은 인증서 경로를 입력해 줍니다.
+                ca: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/fullchain.pem"),
+                key: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/privkey.pem"),
+                cert: fs.readFileSync("/etc/letsencrypt/live/weare-first.com/cert.pem")
+        };
+        https.createServer(options, app).listen(HTTPS_PORT, console.log("Server on " + HTTPS_PORT));
+
+}
+
 
 // Default route for server status
 app.get('/', (req, res) => {
         res.json({ message: `Server is running on port ${req.secure ? HTTPS_PORT : HTTP_PORT}` });
 });
 
-// Create an HTTP server.
-http.createServer(app).listen(HTTP_PORT), console.log("Server on " + HTTP_PORT);
-
-// Create an HTTPS server.
-//https.createServer(options, app).listen(HTTPS_PORT, console.log("Server on " + HTTPS_PORT));
 
 //https.createServer(options, app).listen(HTTPS_PORT);

@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken')
 
 const { checkLevel, getSQLnParams, getUserPKArrStrWithNewPK,
     isNotNullOrUndefined, namingImagesPath, nullResponse,
-    lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber
+    lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber
 } = require('../util')
 const {
     getRowsNumWithKeyword, getRowsNum, getAllDatas,
@@ -940,7 +940,7 @@ const getVideoContent = (req, res) => {
         const pk = req.query.pk;
         let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;//비디오 정보
         let sql2 = `SELECT video_relate_table.*, video_table.* FROM video_relate_table LEFT JOIN video_table ON video_relate_table.relate_video_pk = video_table.pk WHERE video_relate_table.video_pk=? `//관련영상
-        let sql3 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY sort DESC LIMIT 5`;//최신영상
+        let sql3 = `SELECT video_table.pk, video_table.link, video_table.title, user_table.name, user_table.nickname FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk ORDER BY pk DESC LIMIT 5`;//최신영상
         if (req.query.views) {
             db.query("UPDATE video_table SET views=views+1 WHERE pk=?", [pk], (err, result_view) => {
                 if (err) {
@@ -981,6 +981,49 @@ const getVideoContent = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const getComments = (req, res) => {
+    try {
+        const { pk, category} = req.query;
+        db.query("SELECT comment_table.*, user_table.nickname, user_table.profile_img FROM comment_table LEFT JOIN user_table ON comment_table.user_pk = user_table.pk WHERE comment_table.item_pk=? AND comment_table.category_pk=? ORDER BY pk DESC",[pk, category],(err, result)=>{
+            if (err) {
+                console.log(err)
+                response(req, res, -200, "fail", [])
+            }
+            else {
+                response(req, res, 200, "success", result)
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addComment = (req, res) => {
+    try {
+        const { userPk, userNick, pk, note, category } = req.body;
+        db.query("INSERT INTO comment_table (user_pk,user_nickname,item_pk,note,category_pk) VALUES (?, ?, ?, ?, ?)", [userPk, userNick, pk, note, category], (err, result) => {
+            if (err) {
+                console.log(err)
+                response(req, res, -200, "fail", [])
+            }
+            else {
+                response(req, res, 200, "success", [])
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateComment = (req, res) => {
+    try {
+
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+
 const addOneWord = (req, res) => {
     try {
         const { title, hash, suggest_title, note, user_pk } = req.body;
@@ -1262,7 +1305,11 @@ const getItem = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                return response(req, res, 100, "success", result[0])
+                if (categoryToNumber(table) != -1) {
+                    return response(req, res, 100, "success", result[0])
+                } else {
+                    return response(req, res, 100, "success", result[0])
+                }
             }
         })
 
@@ -1272,6 +1319,7 @@ const getItem = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+
 const addVideo = (req, res) => {
     try {
         const { user_pk, title, link, note, font_color, background_color, relate_video } = req.body;
@@ -1714,8 +1762,8 @@ const changeItemSequence = (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword,//update
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments,//select
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, //insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment,//update
     deleteItem
 };
