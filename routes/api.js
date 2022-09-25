@@ -120,7 +120,8 @@ const onLoginById = async (req, res) => {
                                     id: result1[0].id,
                                     user_level: result1[0].user_level,
                                     phone: result1[0].phone,
-                                    profile_img: result1[0].profile_img
+                                    profile_img: result1[0].profile_img,
+                                    type: result1[0].type
                                 },
                                     jwtSecret,
                                     {
@@ -171,7 +172,8 @@ const onLoginBySns = (req, res) => {
                         id: result[0].id,
                         user_level: result[0].user_level,
                         phone: result[0].phone,
-                        profile_img: result[0].profile_img
+                        profile_img: result[0].profile_img,
+                        type: typeNum
                     },
                         jwtSecret,
                         {
@@ -204,7 +206,8 @@ const onLoginBySns = (req, res) => {
                                         id: id,
                                         user_level: user_level,
                                         phone: phone,
-                                        profile_img: profile_img
+                                        profile_img: profile_img,
+                                        type: typeNum
                                     },
                                         jwtSecret,
                                         {
@@ -539,13 +542,14 @@ const getUserToken = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 0)
         if (decode) {
-            let id = decode.id;
             let pk = decode.pk;
             let nickname = decode.nickname;
+            let id = decode.id;
             let phone = decode.phone;
-            let level = decode.user_level;
+            let user_level = decode.user_level;
             let profile_img = decode.profile_img;
-            res.send({ id, pk, nickname, phone, level, profile_img })
+            let type = decode.type;
+            res.send({ id, pk, nickname, phone, user_level, profile_img, type })
         }
         else {
             res.send({
@@ -983,18 +987,18 @@ const getVideoContent = (req, res) => {
 }
 const getComments = (req, res) => {
     try {
-        const { pk, category} = req.query;
+        const { pk, category } = req.query;
         let zColumn = [];
         let columns = ""
-        if(pk){
+        if (pk) {
             zColumn.push(pk)
             columns += " AND comment_table.item_pk=? ";
         }
-        if(category){
+        if (category) {
             zColumn.push(category)
             columns += " AND comment_table.category_pk=? ";
         }
-        db.query(`SELECT comment_table.*, user_table.nickname, user_table.profile_img FROM comment_table LEFT JOIN user_table ON comment_table.user_pk = user_table.pk WHERE 1=1 ${columns} ORDER BY pk ASC`,zColumn,(err, result)=>{
+        db.query(`SELECT comment_table.*, user_table.nickname, user_table.profile_img FROM comment_table LEFT JOIN user_table ON comment_table.user_pk = user_table.pk WHERE 1=1 ${columns} ORDER BY pk DESC`, zColumn, (err, result) => {
             if (err) {
                 console.log(err)
                 response(req, res, -200, "fail", [])
