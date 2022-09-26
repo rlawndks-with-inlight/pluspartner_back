@@ -575,12 +575,17 @@ const onLogout = (req, res) => {
 }
 const getUsers = (req, res) => {
     try {
+        console.log(req.query)
         let sql = "SELECT * FROM user_table ";
         let pageSql = "SELECT COUNT(*) FROM user_table ";
         let page_cut = req.query.page_cut;
+        let status = req.query.status;
         let whereStr = " WHERE 1=1 ";
         if (req.query.level) {
             whereStr += ` AND user_level=${req.query.level} `;
+        }
+        if(status){
+            whereStr += ` AND status=${status} `;
         }
         if (!page_cut) {
             page_cut = 15
@@ -836,7 +841,7 @@ const getHomeContent = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                await db.query('SELECT * FROM user_table WHERE user_level=30 ORDER BY sort DESC', async (err, result0) => {
+                await db.query('SELECT * FROM user_table WHERE user_level=30 AND status=1 ORDER BY sort DESC', async (err, result0) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
