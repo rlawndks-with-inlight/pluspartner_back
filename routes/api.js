@@ -866,17 +866,24 @@ const getHomeContent = (req, res) => {
                                                         console.log(err)
                                                         return response(req, res, -200, "서버 에러 발생", [])
                                                     } else {
-                                                        await db.query('SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result5) => {
+                                                        await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM strategy_table WHERE status=1 ORDER BY sort DESC LIMIT 3', async (err, result5) => {
                                                             if (err) {
                                                                 console.log(err)
                                                                 return response(req, res, -200, "서버 에러 발생", [])
                                                             } else {
-                                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM strategy_table WHERE status=1 ORDER BY sort DESC LIMIT 3', async (err, result6) => {
+                                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result6) => {
                                                                     if (err) {
                                                                         console.log(err)
                                                                         return response(req, res, -200, "서버 에러 발생", [])
                                                                     } else {
-                                                                        return response(req, res, 100, "success", { setting: result_1[0], masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, videos: result5, strategies: result6 })
+                                                                        await db.query('SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result7) => {
+                                                                            if (err) {
+                                                                                console.log(err)
+                                                                                return response(req, res, -200, "서버 에러 발생", [])
+                                                                            } else {
+                                                                                return response(req, res, 100, "success", { setting: result_1[0], masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, strategies: result5,features:result6, videos: result7 })
+                                                                            }
+                                                                        })
                                                                     }
                                                                 })
                                                             }
@@ -1127,15 +1134,22 @@ const addItem = (req, res) => {
             columns += ', category_pk '
             values += ' ,? '
         }
-        let image = "";
-        if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
-        } else {
-            image = req.body.url ?? "";
-        }
-        zColumn.push(image);
-        columns += ', main_img)'
-        values += ',?)'
+        let content_image = "";
+        let content2_image = "";
+        if (req.files.content) {
+            content_image = '/image/' + req.files.content[0].fieldname + '/' + req.files.content[0].filename;
+            zColumn.push(content_image);
+            columns += ', main_img';
+            values += ', ?';
+        } 
+        if (req.files.content2) {
+            content2_image = '/image/' + req.files.content2[0].fieldname + '/' + req.files.content2[0].filename;
+            zColumn.push(content2_image);
+            columns += ', second_img';
+            values += ', ?';
+        } 
+        columns += ')';
+        values += ')';
         db.query(`INSERT INTO ${table}_table ${columns} VALUES ${values}`, zColumn, async (err, result) => {
             if (err) {
                 console.log(err)

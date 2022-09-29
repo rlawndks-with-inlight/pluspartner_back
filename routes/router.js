@@ -10,7 +10,7 @@ const {
 } = require('./api')
 
 router.post('/editmyinfo', editMyInfo);
-router.post('/uploadprofile',upload.single('profile'), uploadProfile)
+router.post('/uploadprofile', upload.single('profile'), uploadProfile)
 router.post('/kakao/callback', kakaoCallBack);
 router.post('/sendsms', sendSms);
 router.post('/findidbyphone', findIdByPhone);
@@ -31,8 +31,8 @@ router.get('/auth', getUserToken);
 router.get('/users', getUsers);
 router.post('/addoneword', upload.single('content'), addOneWord);
 router.post('/addoneevent', upload.single('content'), addOneEvent);
-router.post('/additem', upload.single('content'), addItem);
-router.post('/updateitem', upload.single('content'), updateItem);
+router.post('/additem', upload.fields([{ name: 'content' }, { name: 'content2' }]), addItem);
+router.post('/updateitem', upload.fields([{ name: 'content' }, { name: 'content2' }]), updateItem);
 router.post('/addvideo', addVideo);
 router.post('/updatevideo', updateVideo);
 router.post('/addnotice', addNotice);
