@@ -101,7 +101,6 @@ const onSignUp = async (req, res) => {
 }
 const onLoginById = async (req, res) => {
     try {
-        console.log(req.body)
         let { id, pw } = req.body;
         db.query('SELECT * FROM user_table WHERE id=?', [id], async (err, result1) => {
             if (err) {
@@ -158,7 +157,6 @@ const onLoginById = async (req, res) => {
 }
 const onLoginBySns = (req, res) => {
     try {
-        console.log(req.body)
         let { id, typeNum, name, nickname, phone, user_level, profile_img } = req.body;
         db.query("SELECT * FROM user_table WHERE id=? AND type=?", [id, typeNum], async (err, result) => {
             if (err) {
@@ -575,7 +573,6 @@ const onLogout = (req, res) => {
 }
 const getUsers = (req, res) => {
     try {
-        console.log(req.query)
         let sql = "SELECT * FROM user_table ";
         let pageSql = "SELECT COUNT(*) FROM user_table ";
         let page_cut = req.query.page_cut;
@@ -1478,7 +1475,6 @@ const updateNotice = (req, res) => {
 }
 const addNoteImage = (req, res) => {
     try {
-        console.log(req.file)
         if (req.file) {
             return response(req, res, 100, "success", { filename: `/image/note/${req.file.filename}` })
         } else {
@@ -1727,7 +1723,6 @@ const updateStatus = (req, res) => {
 
 const onTheTopItem = (req, res) => {
     try {
-        console.log(req.body)
         const { table, pk } = req.body;
         db.query(`SHOW TABLE STATUS LIKE '${table}_table' `, async (err, result1) => {
             if (err) {
@@ -1759,7 +1754,6 @@ const onTheTopItem = (req, res) => {
 }
 const changeItemSequence = (req, res) => {
     try {
-        console.log(req.body)
         const { pk, sort, table, change_pk, change_sort } = req.body;
         let date = new Date();
         date = parseInt(date.getTime() / 1000);
