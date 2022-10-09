@@ -29,7 +29,6 @@ const salt = "435f5ef2ffb83a632c843926b35ae7855bc2520021a73a043db41670bfaeb722"
 const saltRounds = 10
 const pwBytes = 64
 const jwtSecret = "djfudnsqlalfKeyFmfRkwu"
-
 const geolocation = require('geolocation')
 const kakaoOpt = {
     clientId: '4a8d167fa07331905094e19aafb2dc47',
@@ -40,9 +39,107 @@ router.get('/', (req, res) => {
     res.send('back-end initialized')
 });
 
+const firebase = require("firebase-admin");
 
+const serviceAccount = require("../config/privatekey_firebase.json");
 
+const firebaseToken = 'eiiShop7Q0ud56wCLF6SZb:APA91bF-VuQq_k0gJU9pNLdSLEgHmK51Sn07sFozfT6Y6qvLKBPBnjqSiNSZSucxuRxLeL_5ubFHWt-xXAMZ1n3INljNBGBnihMOQIHv39wlZ2by-drDP987JYpCX4Q_GE1N1NiosIT2';
 
+firebase.initializeApp({
+    credential: firebase.credential.cert(serviceAccount)
+});
+
+const addAlarm = (req, res) => {
+    try {
+        // 바로할지, 0-1, 요일, 시간, 
+        const { title, note, type, start_date, days, time } = req.body;
+        const payload = {
+            notification: {
+                title: title,
+                body: note,
+                click_action: "FLUTTER_NOTIFICATION_CLICK"
+            },
+            data: {
+                data1: "data1 value",
+                data2: "data2 value"
+            }
+        }
+        const options = { priority: 'high', timeToLive: 60 * 60 * 24 };
+        if (type == 0) {
+            firebase.messaging().sendToDevice(firebaseToken, payload, options)
+                .then(function (response) {
+                    console.log("Successfully sent message:", response);
+                    console.log(response.results[0].error)
+                })
+                .catch(function (error) {
+                    console.log("Error sending message:", error);
+                    return response(req, res, -100, "전송에 실패했습니다.", [])
+                });
+        }
+        db.query("INSERT INTO alarm_table (title, note, type, start_date, days, time) VALUES (?, ?, ?, ?, ?, ?)", [title, note, type, start_date, days, time], async(err, result) => {
+            if (err) {
+                console.log(err)
+                response(req, res, -200, "알람 추가 실패", [])
+            }
+            else {
+                
+                await db.query("UPDATE alarm_table SET sort=? WHERE pk=?",[result.insertId, result.insertId],(err, result)=>{
+                    if (err) {
+                        console.log(err)
+                        response(req, res, -200, "알람 추가 실패", [])
+                    }
+                    else {
+                        response(req, res, 200, "알람 추가 성공", [])
+                    }
+                })
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateAlarm = (req, res) => {
+    try {
+        // 바로할지, 0-1, 요일, 시간, 
+        const { title, note, type, start_date, days, time, pk } = req.body;
+        const payload = {
+            notification: {
+                title: title,
+                body: note,
+                click_action: "FLUTTER_NOTIFICATION_CLICK"
+            },
+            data: {
+                data1: "data1 value",
+                data2: "data2 value"
+            }
+        }
+        const options = { priority: 'high', timeToLive: 60 * 60 * 24 };
+        if (type == 0) {
+            firebase.messaging().sendToDevice(firebaseToken, payload, options)
+                .then(function (response) {
+                    console.log("Successfully sent message:", response);
+                })
+                .catch(function (error) {
+                    console.log("Error sending message:", error);
+                    return response(req, res, -100, "전송에 실패했습니다.", [])
+                });
+        }
+        db.query("UPDATE alarm_table SET title=?, note=?, type=?, start_date=?, days=?, time=? WHERE pk=?", [title, note, type, start_date, days, time, pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                response(req, res, -200, "알람 수정 실패", [])
+            }
+            else {
+                response(req, res, 200, "알람 수정 성공", [])
+            }
+        })
+
+    } catch (err) {
+        console.log(err)
+        response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const onSignUp = async (req, res) => {
     try {
 
@@ -93,8 +190,7 @@ const onSignUp = async (req, res) => {
             }
         })
 
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err)
         response(req, res, -200, "서버 에러 발생", [])
     }
@@ -581,7 +677,7 @@ const getUsers = (req, res) => {
         if (req.query.level) {
             whereStr += ` AND user_level=${req.query.level} `;
         }
-        if(status){
+        if (status) {
             whereStr += ` AND status=${status} `;
         }
         if (!page_cut) {
@@ -878,7 +974,7 @@ const getHomeContent = (req, res) => {
                                                                                 console.log(err)
                                                                                 return response(req, res, -200, "서버 에러 발생", [])
                                                                             } else {
-                                                                                return response(req, res, 100, "success", { setting: result_1[0], masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, strategies: result5,features:result6, videos: result7 })
+                                                                                return response(req, res, 100, "success", { setting: result_1[0], masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, strategies: result5, features: result6, videos: result7 })
                                                                             }
                                                                         })
                                                                     }
@@ -1138,13 +1234,13 @@ const addItem = (req, res) => {
             zColumn.push(content_image);
             columns += ', main_img';
             values += ', ?';
-        } 
+        }
         if (req.files.content2) {
             content2_image = '/image/' + req.files.content2[0].fieldname + '/' + req.files.content2[0].filename;
             zColumn.push(content2_image);
             columns += ', second_img';
             values += ', ?';
-        } 
+        }
         columns += ')';
         values += ')';
         db.query(`INSERT INTO ${table}_table ${columns} VALUES ${values}`, zColumn, async (err, result) => {
@@ -1318,7 +1414,7 @@ const getItem = (req, res) => {
 
         let sql = `SELECT * FROM ${table}_table ` + whereStr;
 
-        if (table != "user" && table != "issue_category" && table != "feature_category") {
+        if (table != "user" && table != "issue_category" && table != "feature_category"&& table != "alarm") {
             sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
         }
         if (req.query.views) {
@@ -1790,7 +1886,7 @@ const changeItemSequence = (req, res) => {
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, //insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment,//update
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem
 };
