@@ -13,7 +13,7 @@ const http = require('http')
 require('dotenv').config()
 //passport, jwt
 const jwt = require('jsonwebtoken')
-const { checkLevel, logRequestResponse, isNotNullOrUndefined, namingImagesPath, nullResponse, lowLevelResponse, response, returnMoment } = require('./util')
+const { checkLevel, logRequestResponse, isNotNullOrUndefined, namingImagesPath, nullResponse, lowLevelResponse, response, returnMoment, sendAlarm } = require('./util')
 app.use(bodyParser.json({ limit: '100mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
 //multer
@@ -28,6 +28,7 @@ app.use(cookieParser());
 const schedule = require('node-schedule');
 
 const path = require('path');
+const { insertQuery } = require('./query-util')
 app.set('/routes', __dirname + '/routes');
 app.use('/config', express.static(__dirname + '/config'));
 //app.use('/image', express.static('./upload'));
@@ -62,33 +63,31 @@ const dbQueryList = (sql, list) => {
                 })
         })
 }
-// let time = new Date(returnMoment())
-// console.log(time)
-// time.setMinutes(time.getMinutes() + 5)
-// console.log(time)
+let time = new Date(returnMoment()).getTime();
+let overFiveTime = new Date(returnMoment());
+overFiveTime.setMinutes(overFiveTime.getMinutes() + 5)
+overFiveTime = overFiveTime.getTime();
+
 const scheduleAlarm = () => {
         schedule.scheduleJob('0 0/1 * * * *', async function () {
                 console.log(returnMoment());
                 let date = returnMoment().substring(0, 10);
-                let time = returnMoment().substring(11, 16);
                 let dayOfWeek = new Date(date).getDay()
                 let result = await dbQueryList(`SELECT * FROM alarm_table WHERE DATEDIFF(?, start_date) >= 0 AND days LIKE '%${dayOfWeek}%' AND status=1 AND type=1 `, [date]);
-                console.log(result)
                 if (result.code > 0) {
                         let list = [...result.result];
                         for (var i = 0; i < list.length; i++) {
-                                let item = date + ' ' + list[i].time;
-                                console.log(item)
-                                item = new Date(item)
-                                let moment = returnMoment();
-                                console.log(moment)
-                                moment = new Date(moment);
-                                let fiveMoreMinute = new Date(returnMoment());
-                                console.log(fiveMoreMinute)
-                                fiveMoreMinute.setMinutes(fiveMoreMinute.getMinutes()+5);
-                                console.log(item)
-                                console.log(moment)
-                                console.log(fiveMoreMinute)
+                                let time = new Date(returnMoment()).getTime();
+                                let overFiveTime = new Date(returnMoment());
+                                overFiveTime.setMinutes(overFiveTime.getMinutes() + 1)
+                                overFiveTime = overFiveTime.getTime();
+
+                                let item_time = new Date(returnMoment().substring(0, 11) + list[i].time).getTime();
+
+                                if (item_time >= time && item_time < overFiveTime) {
+                                        sendAlarm(list[i].title, list[i].note,"alarm",list[i].pk);
+                                        insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)",[list[i].title, list[i].note,"alarm",list[i].pk])
+                                }
                         }
                 }
         })
@@ -96,7 +95,7 @@ const scheduleAlarm = () => {
 if (is_test) {
         http.createServer(app).listen(HTTP_PORT, function () {
                 console.log("Server on " + HTTP_PORT)
-                //scheduleAlarm();
+                scheduleAlarm();
         });
 
 } else {
@@ -107,7 +106,7 @@ if (is_test) {
         };
         https.createServer(options, app).listen(HTTPS_PORT, function () {
                 console.log("Server on " + HTTPS_PORT);
-                //scheduleAlarm();
+                scheduleAlarm();
         });
 
 }

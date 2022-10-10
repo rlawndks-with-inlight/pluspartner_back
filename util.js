@@ -2,6 +2,36 @@
 const jwt = require('jsonwebtoken')
 const db = require('./config/db')
 const jwtSecret = "djfudnsqlalfKeyFmfRkwu"
+const firebase = require("firebase-admin");
+const serviceAccount = require("./config/privatekey_firebase.json");
+const { insertQuery } = require('./query-util');
+const firebaseToken = 'eBKEuajxQD29hLahKwbgMw:APA91bGTmygmnu4AOAWOufy23MGqeuPiF8Huzy9EHNOMWDy1Rj-lz5ZTe5ocRw6FTG-nPGvQZ3AeUYThz55ATlSDhzEfW7PZcK2UxjiogsCeYG3mQz4r6hrmALviGDewwaFui7Ld-DvY';
+firebase.initializeApp({
+    credential: firebase.credential.cert(serviceAccount)
+});
+const sendAlarm = (title, note, table, pk) => {
+    const payload = {
+        notification: {
+            title: title,
+            body: note,
+            click_action: "",
+            badge:"0"
+        },
+        data: {
+            table: table,
+            pk: pk.toString()
+        }
+    }
+    const options = { priority: 'high', timeToLive: 60 * 60 * 24 };
+    firebase.messaging().sendToDevice(firebaseToken, payload, options)
+        .then(function (response) {
+            console.log("Successfully sent message:", response);
+            console.log(response.results[0].error)
+        })
+        .catch(function (error) {
+            console.log("Error sending message:", error);
+        });
+}
 
 let checkLevel = (token, level) => {
     try {
@@ -248,5 +278,5 @@ module.exports = {
     logRequestResponse, logResponse, logRequest,
     getUserPKArrStrWithNewPK, isNotNullOrUndefined,
     namingImagesPath, getSQLnParams,
-    nullResponse, lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber
+    nullResponse, lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber, sendAlarm
 }

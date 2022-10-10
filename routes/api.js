@@ -11,12 +11,12 @@ const jwt = require('jsonwebtoken')
 
 const { checkLevel, getSQLnParams, getUserPKArrStrWithNewPK,
     isNotNullOrUndefined, namingImagesPath, nullResponse,
-    lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber
+    lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber, sendAlarm
 } = require('../util')
 const {
     getRowsNumWithKeyword, getRowsNum, getAllDatas,
     getDatasWithKeywordAtPage, getDatasAtPage,
-    getKioskList, getItemRows, getItemList, dbQueryList, dbQueryRows
+    getKioskList, getItemRows, getItemList, dbQueryList, dbQueryRows, insertQuery
 } = require('../query-util')
 
 const db = require('../config/db')
@@ -39,51 +39,24 @@ router.get('/', (req, res) => {
     res.send('back-end initialized')
 });
 
-const firebase = require("firebase-admin");
-
-const serviceAccount = require("../config/privatekey_firebase.json");
-
-const firebaseToken = 'eiiShop7Q0ud56wCLF6SZb:APA91bF-VuQq_k0gJU9pNLdSLEgHmK51Sn07sFozfT6Y6qvLKBPBnjqSiNSZSucxuRxLeL_5ubFHWt-xXAMZ1n3INljNBGBnihMOQIHv39wlZ2by-drDP987JYpCX4Q_GE1N1NiosIT2';
-
-firebase.initializeApp({
-    credential: firebase.credential.cert(serviceAccount)
-});
 
 const addAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
         const { title, note, type, start_date, days, time } = req.body;
-        const payload = {
-            notification: {
-                title: title,
-                body: note,
-                click_action: "FLUTTER_NOTIFICATION_CLICK"
-            },
-            data: {
-                data1: "data1 value",
-                data2: "data2 value"
-            }
-        }
-        const options = { priority: 'high', timeToLive: 60 * 60 * 24 };
-        if (type == 0) {
-            firebase.messaging().sendToDevice(firebaseToken, payload, options)
-                .then(function (response) {
-                    console.log("Successfully sent message:", response);
-                    console.log(response.results[0].error)
-                })
-                .catch(function (error) {
-                    console.log("Error sending message:", error);
-                    return response(req, res, -100, "전송에 실패했습니다.", [])
-                });
-        }
-        db.query("INSERT INTO alarm_table (title, note, type, start_date, days, time) VALUES (?, ?, ?, ?, ?, ?)", [title, note, type, start_date, days, time], async(err, result) => {
+        
+        
+        db.query("INSERT INTO alarm_table (title, note, type, start_date, days, time) VALUES (?, ?, ?, ?, ?, ?)", [title, note, type, start_date, days, time], async (err, result) => {
             if (err) {
                 console.log(err)
                 response(req, res, -200, "알람 추가 실패", [])
             }
             else {
-                
-                await db.query("UPDATE alarm_table SET sort=? WHERE pk=?",[result.insertId, result.insertId],(err, result)=>{
+                if (type == 0) {
+                    sendAlarm(title,note,"alarm",result.insertId);
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)",[title,note,"alarm",result.insertId])
+                }
+                await db.query("UPDATE alarm_table SET sort=? WHERE pk=?", [result.insertId, result.insertId], (err, result) => {
                     if (err) {
                         console.log(err)
                         response(req, res, -200, "알람 추가 실패", [])
@@ -103,28 +76,6 @@ const updateAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
         const { title, note, type, start_date, days, time, pk } = req.body;
-        const payload = {
-            notification: {
-                title: title,
-                body: note,
-                click_action: "FLUTTER_NOTIFICATION_CLICK"
-            },
-            data: {
-                data1: "data1 value",
-                data2: "data2 value"
-            }
-        }
-        const options = { priority: 'high', timeToLive: 60 * 60 * 24 };
-        if (type == 0) {
-            firebase.messaging().sendToDevice(firebaseToken, payload, options)
-                .then(function (response) {
-                    console.log("Successfully sent message:", response);
-                })
-                .catch(function (error) {
-                    console.log("Error sending message:", error);
-                    return response(req, res, -100, "전송에 실패했습니다.", [])
-                });
-        }
         db.query("UPDATE alarm_table SET title=?, note=?, type=?, start_date=?, days=?, time=? WHERE pk=?", [title, note, type, start_date, days, time, pk], (err, result) => {
             if (err) {
                 console.log(err)
@@ -1414,7 +1365,7 @@ const getItem = (req, res) => {
 
         let sql = `SELECT * FROM ${table}_table ` + whereStr;
 
-        if (table != "user" && table != "issue_category" && table != "feature_category"&& table != "alarm") {
+        if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm") {
             sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
         }
         if (req.query.views) {
@@ -1535,6 +1486,8 @@ const addNotice = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
+                sendAlarm("공지사항: "+title,"","notice",result.insertId);
+                insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)",["공지사항: "+title,"","notice",result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
                         console.log(err)
