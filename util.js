@@ -5,7 +5,7 @@ const jwtSecret = "djfudnsqlalfKeyFmfRkwu"
 const firebase = require("firebase-admin");
 const serviceAccount = require("./config/privatekey_firebase.json");
 const { insertQuery } = require('./query-util');
-const firebaseToken = 'emF14dGISkupap3LARII-8:APA91bGT8LMBqgetd0mc-m3IL8qHnlPshXtBGWq9mty2BRrQ5GRG7jcM4oDDk50znB4kjYl-3xoEK_pAWgSkIlonOqzvS6rEkubGKlGfuPQPAQWMyGmdEtH265Ya11b8MHZ1TIyReJ6o';
+const firebaseToken = 'cSDcqTqpQIC_IQ6QJLJ9x6:APA91bFCdqEmWpMm-pY8UxeHODGzWmbBUUuYkS7UihKteD5x2wsFQbu4oWWhHfb62j_xiqvF2cWdzAvcrRRw9KniuP1ud_i2xIFVOH3S7-fg-4XNsaozJzC7frrbr5un2Y8-GbX6MlhN';
 firebase.initializeApp({
     credential: firebase.credential.cert(serviceAccount)
 });
