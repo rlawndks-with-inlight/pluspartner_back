@@ -3,7 +3,7 @@ const router = express.Router();
 const { upload } = require('../config/multerConfig')
 const {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem
@@ -61,7 +61,8 @@ router.get('/video/:pk', getVideo);
 router.post('/onthetopitem', onTheTopItem);
 router.post('/changeitemsequence', changeItemSequence);
 router.get('/getcommnets', getComments);
-router.post('/addcomment', addComment);
+router.post('/addcomment', addComment);getCommentsManager
 router.post('/updatecomment', updateComment);
+router.get('/getcommentsmanager', getCommentsManager);
 
 module.exports = router;

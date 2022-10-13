@@ -44,8 +44,8 @@ const addAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
         const { title, note, type, start_date, days, time } = req.body;
-        
-        
+
+
         db.query("INSERT INTO alarm_table (title, note, type, start_date, days, time) VALUES (?, ?, ?, ?, ?, ?)", [title, note, type, start_date, days, time], async (err, result) => {
             if (err) {
                 console.log(err)
@@ -53,8 +53,8 @@ const addAlarm = (req, res) => {
             }
             else {
                 if (type == 0) {
-                    sendAlarm(title,note,"alarm",result.insertId);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)",[title,note,"alarm",result.insertId])
+                    sendAlarm(title, note, "alarm", result.insertId);
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, note, "alarm", result.insertId])
                 }
                 await db.query("UPDATE alarm_table SET sort=? WHERE pk=?", [result.insertId, result.insertId], (err, result) => {
                     if (err) {
@@ -1070,8 +1070,8 @@ const getComments = (req, res) => {
 }
 const addComment = (req, res) => {
     try {
-        const { userPk, userNick, pk, note, category } = req.body;
-        db.query("INSERT INTO comment_table (user_pk,user_nickname,item_pk,note,category_pk) VALUES (?, ?, ?, ?, ?)", [userPk, userNick, pk, note, category], (err, result) => {
+        const { userPk, userNick, pk, title, note, category } = req.body;
+        db.query("INSERT INTO comment_table (user_pk,user_nickname,item_pk,item_title, note,category_pk) VALUES (?, ?, ?, ?, ?, ?)", [userPk, userNick, pk, title, note, category], (err, result) => {
             if (err) {
                 console.log(err)
                 response(req, res, -200, "fail", [])
@@ -1093,7 +1093,14 @@ const updateComment = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-
+const getCommentsManager = (req, res) => {
+    try {
+        let sql = `SELECT COUNT(*) FROM comment_table `
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const addOneWord = (req, res) => {
     try {
         const { title, hash, suggest_title, note, user_pk } = req.body;
@@ -1491,8 +1498,8 @@ const addNotice = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                sendAlarm("공지사항: "+title,"","notice",result.insertId);
-                insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)",["공지사항: "+title,"","notice",result.insertId])
+                sendAlarm("공지사항: " + title, "", "notice", result.insertId);
+                insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", ["공지사항: " + title, "", "notice", result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
                         console.log(err)
@@ -1626,7 +1633,7 @@ const getOneEvent = (req, res) => {
 }
 const getItems = (req, res) => {
     try {
-        let { level, category_pk, status, user_pk, keyword, limit, page, page_cut } = req.query;
+        let { level, category_pk, status, user_pk, keyword, limit, page, page_cut, order } = req.query;
         let table = req.query.table ?? "user";
         let sql = `SELECT * FROM ${table}_table `;
         let pageSql = `SELECT COUNT(*) FROM ${table}_table `;
@@ -1651,7 +1658,7 @@ const getItems = (req, res) => {
             page_cut = 15;
         }
         pageSql = pageSql + whereStr;
-        sql = sql + whereStr + " ORDER BY sort DESC ";
+        sql = sql + whereStr + ` ORDER BY ${order?order:'sort'} DESC `;
         if (limit && !page) {
             sql += ` LIMIT ${limit} `;
         }
@@ -1843,7 +1850,7 @@ const changeItemSequence = (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem
