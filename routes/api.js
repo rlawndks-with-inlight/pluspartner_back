@@ -1215,6 +1215,41 @@ const addItem = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const updateItem = (req, res) => {
+    try {
+        const { title, hash, suggest_title, note, user_pk, table, category, font_color, background_color, pk } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color];
+        let columns = " title=?, hash=?, suggest_title=?, note=?, user_pk=?, font_color=?, background_color=? ";
+        if (category) {
+            zColumn.push(category);
+            columns += ', category_pk=? '
+        }
+        let content_image = "";
+        let content2_image = "";
+        if (req.files.content) {
+            content_image = '/image/' + req.files.content[0].fieldname + '/' + req.files.content[0].filename;
+            zColumn.push(content_image);
+            columns += ', main_img=?';
+        }
+        if (req.files.content2) {
+            content2_image = '/image/' + req.files.content2[0].fieldname + '/' + req.files.content2[0].filename;
+            zColumn.push(content2_image);
+            columns += ', second_img=?';
+        }
+        zColumn.push(pk)
+        db.query(`UPDATE ${table}_table SET ${columns} WHERE pk=? `, zColumn, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const addIssueCategory = (req, res) => {
     try {
         const { title, sub_title } = req.body;
@@ -1323,37 +1358,7 @@ const updateFeatureCategory = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const updateItem = (req, res) => {
-    try {
-        const { title, hash, suggest_title, note, user_pk, table, category, font_color, background_color, pk } = req.body;
-        let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color];
-        let columns = " title=?, hash=?, suggest_title=?, note=?, user_pk=?, font_color=?, background_color=? ";
-        if (category) {
-            zColumn.push(category);
-            columns += ', category_pk=? '
-        }
-        let image = "";
-        if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
-        } else {
-            image = req.body.url ?? "";
-        }
-        zColumn.push(image);
-        columns += ', main_img=? '
-        zColumn.push(pk)
-        db.query(`UPDATE ${table}_table SET ${columns} WHERE pk=? `, zColumn, (err, result) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "서버 에러 발생", []);
-            } else {
-                return response(req, res, 100, "success", []);
-            }
-        })
-    } catch (err) {
-        console.log(err)
-        return response(req, res, -200, "서버 에러 발생", [])
-    }
-}
+
 const getItem = (req, res) => {
     try {
         let table = req.query.table ?? "user";
