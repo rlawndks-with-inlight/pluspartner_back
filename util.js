@@ -18,7 +18,7 @@ const sendAlarm = (title, note, table, pk) => {
         notification: {
             title: (table == 'notice' ? '공지사항: ' : '') + title,
             body: note,
-            click_action: "FLUTTER_NOTIFICATION_CLICK",
+            click_action: "",
             badge: "1",
             "icon": "myicon",
             "sound": "default"
@@ -26,7 +26,7 @@ const sendAlarm = (title, note, table, pk) => {
         data: {
             table: table,
             pk: pk.toString(),
-            title: (table == 'notice' ? '공지사항: ' : '') + title,
+            title: (table == 'notice' ? '공지사항 ' : '') + title,
             body: note
         }
     }

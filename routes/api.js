@@ -1499,8 +1499,8 @@ const addNotice = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                sendAlarm("공지사항: " + title, "", "notice", result.insertId);
-                //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", ["공지사항: " + title, "", "notice", result.insertId])
+                sendAlarm( title, "", "notice", result.insertId);
+                //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, "", "notice", result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
                         console.log(err)
