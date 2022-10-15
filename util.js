@@ -16,15 +16,18 @@ const sendAlarm = (title, note, table, pk) => {
     let message = {
         to: '/topics/' + 'weare',
         notification: {
-            title: (table=='notice'?'공지사항: ':'')+title,
+            title: (table == 'notice' ? '공지사항: ' : '') + title,
             body: note,
             click_action: "FLUTTER_NOTIFICATION_CLICK",
             badge: "1",
-            sound:"default"
+            "icon": "myicon",
+            "sound": "default"
         },
         data: {
             table: table,
-            pk: pk.toString()
+            pk: pk.toString(),
+            title: (table == 'notice' ? '공지사항: ' : '') + title,
+            body: note
         }
     }
     //const options = { priority: 'high', timeToLive: 60 * 60 * 24 };
