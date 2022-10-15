@@ -16,7 +16,7 @@ const sendAlarm = (title, note, table, pk) => {
     let message = {
         to: '/topics/' + 'weare',
         notification: {
-            title: title,
+            title: (table=='notice'?'공지사항: ':'')+title,
             body: note,
             click_action: "FLUTTER_NOTIFICATION_CLICK",
             badge: "1",
