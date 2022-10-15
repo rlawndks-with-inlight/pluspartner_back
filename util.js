@@ -3,34 +3,38 @@ const jwt = require('jsonwebtoken')
 const db = require('./config/db')
 const jwtSecret = "djfudnsqlalfKeyFmfRkwu"
 const firebase = require("firebase-admin");
+const fcmNode = require("fcm-node");
 const serviceAccount = require("./config/privatekey_firebase.json");
 const { insertQuery } = require('./query-util');
 const firebaseToken = 'fV0vRpDpTfCnY_VggFEgN7:APA91bHdHP6ilBpe9Wos5Y72SXFka2uAM3luANewGuw7Bx2XGnvUNjK5e5k945xwcXpW8NNei3LEaBtKT2_2A6naix8Wg5heVik8O2Aop_fu8bUibnGxuCe3RLQDtHNrMeC5gmgGRoVh';
+const fcmServerKey = "AAAA35TttWk:APA91bGLGZjdD2fgaPRh8eYyu9CDSndD97ZdO4MBypbpICClEwMADAJnt2giOaCWRvMldof5DkplMptbmyN0Fm0Q975dm-CD7i0XhrHzjgMN0EKfXHxLy4NyohEVXDHW5DBfYrlncvQh";
 firebase.initializeApp({
     credential: firebase.credential.cert(serviceAccount)
 });
 const sendAlarm = (title, note, table, pk) => {
-    const payload = {
+    let fcm = new fcmNode(fcmServerKey)
+    let message = {
+        to: '/topics/' + 'weare',
         notification: {
             title: title,
             body: note,
-            click_action: "",
-            badge:"0"
+            click_action: "FLUTTER_NOTIFICATION_CLICK",
+            badge: "1",
+            sound:"default"
         },
         data: {
             table: table,
             pk: pk.toString()
         }
     }
-    const options = { priority: 'high', timeToLive: 60 * 60 * 24 };
-    firebase.messaging().sendToDevice(firebaseToken, payload, options)
-        .then(function (response) {
-            console.log("Successfully sent message:", response);
-            console.log(response.results[0].error)
-        })
-        .catch(function (error) {
-            console.log("Error sending message:", error);
-        });
+    //const options = { priority: 'high', timeToLive: 60 * 60 * 24 };
+    fcm.send(message, (err, res) => {
+        if (err) {
+            console.log("Error sending message:", err);
+        } else {
+            console.log("Successfully sent message:", res);
+        }
+    })
 }
 
 let checkLevel = (token, level) => {

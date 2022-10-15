@@ -17,6 +17,7 @@
     "dotenv": "^10.0.0",
     "express": ">= 2.5.9",
     "express-session": "^1.17.2",
+    "fcm-node": "^1.6.1",
     "firebase-admin": "^11.1.0",
     "fs": "0.0.1-security",
     "geolocation": "^0.2.0",
