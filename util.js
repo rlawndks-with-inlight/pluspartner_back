@@ -20,7 +20,6 @@ const sendAlarm = (title, note, table, pk) => {
             body: note,
             click_action: "",
             badge: "1",
-            "icon": "myicon",
             "sound": "default"
         },
         data: {
