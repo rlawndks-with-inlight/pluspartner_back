@@ -7,7 +7,6 @@ const {
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem,
-    asdasd
 } = require('./api')
 
 router.post('/addalarm', addAlarm);
@@ -65,6 +64,5 @@ router.get('/getcommnets', getComments);
 router.post('/addcomment', addComment);getCommentsManager
 router.post('/updatecomment', updateComment);
 router.get('/getcommentsmanager', getCommentsManager);
-router.post('/asdasd', asdasd);
 
 module.exports = router;

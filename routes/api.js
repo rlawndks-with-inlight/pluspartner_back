@@ -245,15 +245,7 @@ const onLoginBySns = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const asdasd = (req, res) =>{
-    try {
-        console.log(req.body)
-        return response(req, res, 50, '신규회원 입니다.', []);
-    } catch (e) {
-        console.log(e)
-        return response(req, res, -200, "서버 에러 발생", [])
-    }
-}
+
 const onLoginByPhone = (req, res) => {
     try {
 
@@ -1829,5 +1821,4 @@ module.exports = {
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem,
-    asdasd
 };
