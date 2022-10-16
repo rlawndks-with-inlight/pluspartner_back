@@ -102,10 +102,9 @@ const onSignUp = async (req, res) => {
         const phone = req.body.phone ?? "";
         const user_level = req.body.user_level ?? 0;
         const type_num = req.body.type_num ?? 0;
-        const profile_img = req.body.profile_img ?? "";
         //중복 체크 
         let sql = "SELECT * FROM user_table WHERE id=?"
-
+        const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
         db.query(sql, [id], (err, result) => {
             if (result.length > 0)
                 response(req, res, -200, "ID가 중복됩니다.", [])
@@ -120,7 +119,7 @@ const onSignUp = async (req, res) => {
                     }
 
                     sql = 'INSERT INTO user_table (id, pw, name, nickname , phone, user_level, type, profile_img) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-                    await db.query(sql, [id, hash, name, nickname, phone, user_level, type_num, profile_img], async (err, result) => {
+                    await db.query(sql, [id, hash, name, nickname, phone, user_level, type_num, image], async (err, result) => {
 
                         if (err) {
                             console.log(err)
@@ -236,7 +235,7 @@ const onLoginBySns = (req, res) => {
                     })
                     return response(req, res, 200, result[0].nickname + ' 님 환영합니다.', result[0]);
                 } else {//신규유저
-                    return response(req, res, 50, '신규회원 입니다.', result[0]);
+                    return response(req, res, 50, '신규회원 입니다.', []);
                 }
             }
         })
