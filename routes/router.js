@@ -20,7 +20,7 @@ router.post('/findauthbyidandphone', findAuthByIdAndPhone);
 router.post('/checkexistid', checkExistId);
 router.post('/checkexistnickname', checkExistNickname);
 router.post('/changepassword', changePassword);
-router.post('/adduser', onSignUp);
+router.post('/adduser', upload.single('profile'), onSignUp);
 router.post('/addmaster', upload.fields([{ name: 'master' }, { name: 'channel' }]), addMaster);
 router.post('/updatemaster', upload.fields([{ name: 'master' }, { name: 'channel' }]), updateMaster);
 router.post('/addchannel', upload.single('channel'), addChannel);
