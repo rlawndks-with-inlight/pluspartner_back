@@ -15,10 +15,12 @@ const sendAlarm = (title, note, table, pk) => {
     let fcm = new fcmNode(fcmServerKey)
     let message = {
         to: '/topics/' + 'weare',
+        "click_action": "FLUTTER_NOTIFICATION_CLICK",
+        "priority": "high",
         notification: {
             title: (table == 'notice' ? '공지사항: ' : '') + title,
             body: note,
-            click_action: "",
+            click_action: "FLUTTER_NOTIFICATION_CLICK",
             badge: "1",
             "sound": "default"
         },

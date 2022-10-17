@@ -16,8 +16,9 @@ const { checkLevel, getSQLnParams, getUserPKArrStrWithNewPK,
 const {
     getRowsNumWithKeyword, getRowsNum, getAllDatas,
     getDatasWithKeywordAtPage, getDatasAtPage,
-    getKioskList, getItemRows, getItemList, dbQueryList, dbQueryRows, insertQuery
+    getKioskList, getItemRows, getItemList, dbQueryList, dbQueryRows, insertQuery, getTableAI
 } = require('../query-util')
+const macaddress = require('node-macaddress');
 
 const db = require('../config/db')
 const { upload } = require('../config/multerConfig')
@@ -34,6 +35,7 @@ const kakaoOpt = {
     clientId: '4a8d167fa07331905094e19aafb2dc47',
     redirectUri: 'http://172.30.1.19:8001/api/kakao/callback',
 };
+
 router.get('/', (req, res) => {
     console.log("back-end initialized")
     res.send('back-end initialized')
@@ -1465,7 +1467,7 @@ const addNotice = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                sendAlarm( title, "", "notice", result.insertId);
+                sendAlarm(title, "", "notice", result.insertId);
                 //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, "", "notice", result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
@@ -1625,7 +1627,7 @@ const getItems = (req, res) => {
             page_cut = 15;
         }
         pageSql = pageSql + whereStr;
-        sql = sql + whereStr + ` ORDER BY ${order?order:'sort'} DESC `;
+        sql = sql + whereStr + ` ORDER BY ${order ? order : 'sort'} DESC `;
         if (limit && !page) {
             sql += ` LIMIT ${limit} `;
         }
@@ -1815,9 +1817,95 @@ const changeItemSequence = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const getCountNotReadNoti = async (req, res) => {
+    try {
+        const { pk, mac_adress } = req.body;
+        let notice_ai = await getTableAI("notice").result - 1;
+        let alarm_ai = await getTableAI("alarm").result - 1;
+        let mac = mac_adress;
+        console.log(notice_ai.result);
+        console.log(alarm_ai.result);
+        if (!pk && !mac_adress) {
+            mac = await new Promise((resolve, reject) => {
+                macaddress.one(function (err, mac) {
+                    console.log(`MacAddress 주소 : ${mac}`);
+                    if (err) {
+                        console.log(err)
+                        reject({
+                            code: -200,
+                            result: ""
+                        })
+                    }
+                    else {
+                        resolve({
+                            code: 200,
+                            result: mac
+                        })
+                    }
+                })
+            })
+            mac = mac.result;
+        }
+        if (pk) {
+            db.query("SELECT * FROM user_table WHERE pk=?", [pk], (err, result) => {
+                if (err) {
+                    console.log(err)
+                    return response(req, res, -200, "서버 에러 발생", [])
+                } else {
+                    return response(req, res, 100, "success", { item: result[0], notice_ai: notice_ai, alarm_ai: alarm_ai })
+                }
+            })
+        } else if (mac) {
+            db.query("SELECT * FROM mac_check_noti_table WHERE mac_address=?", [mac], async (err, result) => {
+                if (err) {
+                    console.log(err)
+                    return response(req, res, -200, "서버 에러 발생", [])
+                } else {
+                    if (result.length > 0) {
+                        return response(req, res, 100, "success", { mac: result[0], notice_ai: notice_ai, alarm_ai: alarm_ai })
+                    } else {
+                        await db.query("INSERT INTO mac_check_noti_table (mac_address) VALUES (?)", [mac], (err, result) => {
+                            if (err) {
+                                console.log(err)
+                                return response(req, res, -200, "서버 에러 발생", [])
+                            } else {
+                                return response(req, res, 100, "success", { item: { mac_address: mac, last_alarm_pk: 0, last_notice_pk: 0 }, notice_ai: notice_ai, alarm_ai: alarm_ai })
+                            }
+                        })
+                    }
+                }
+            })
+        }
+
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const setCountNotReadNoti = async (req, res) => {
+    try {
+        const { table, pk, mac, category } = req.body;
+        let notice_ai = await getTableAI("notice").result - 1;
+        let alarm_ai = await getTableAI("alarm").result - 1;
+
+        let key = pk || mac;
+        db.query(`UPDATE ${table}_table SET last_${category}_pk=${category == 'notice' ? notice_ai : alarm_ai} WHERE ${pk ? 'pk' : 'mac_address'}=?`, [key], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", { item: { mac_address: mac, last_alarm_pk: 0, last_notice_pk: 0 }, notice_ai: notice_ai.result, alarm_ai: alarm_ai.result })
+            }
+        })
+
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem,

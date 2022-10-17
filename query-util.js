@@ -59,6 +59,26 @@ const insertQuery = (sql, list) => {
         })
     })
 }
+const getTableAI = (table) => {
+    return new Promise((resolve, reject) => {
+        db.query(`SHOW TABLE STATUS LIKE '${table}_table'`, (err, result, fields) => {
+            if (err) {
+                console.log(sql)
+                console.log(err)
+                reject({
+                    code: -200,
+                    result: result
+                })
+            }
+            else {
+                resolve({
+                    code: 200,
+                    result: result[0]?.Auto_increment??0
+                })
+            }
+        })
+    })
+}
 async function getRowsNumWithKeyword(table, columns, keyword) {
     let sql = 'SELECT COUNT(*) as TABLE_ROWS FROM ' + table
     let count = 0
@@ -242,5 +262,5 @@ module.exports = {
     getRowsNumWithKeyword, getRowsNum, getAllDatas,
     getDatasWithKeywordAtPage, getDatasAtPage,
     getKioskList, getItemRows, getItemList,
-    dbQueryList, dbQueryRows, insertQuery
+    dbQueryList, dbQueryRows, insertQuery, getTableAI
 }
