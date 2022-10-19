@@ -28,7 +28,7 @@ const sendAlarm = (title, note, table, pk) => {
             table: table,
             pk: pk.toString(),
             title: (table == 'notice' ? '공지사항 ' : '') + title,
-            body: note
+            body: note,
         }
     }
     //const options = { priority: 'high', timeToLive: 60 * 60 * 24 };

@@ -85,8 +85,8 @@ const scheduleAlarm = () => {
                                 let item_time = new Date(returnMoment().substring(0, 11) + list[i].time).getTime();
 
                                 if (item_time >= time && item_time < overFiveTime) {
-                                        sendAlarm(list[i].title, list[i].note,"alarm",list[i].pk);
-                                        insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)",[list[i].title, list[i].note,"alarm",list[i].pk])
+                                        sendAlarm(list[i].title, list[i].note, "alarm", list[i].pk);
+                                        insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [list[i].title, list[i].note, "alarm", list[i].pk])
                                 }
                         }
                 }
