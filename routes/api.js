@@ -45,17 +45,17 @@ router.get('/', (req, res) => {
 const addAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
-        const { title, note, type, start_date, days, time } = req.body;
+        const { title, note,url, type, start_date, days, time } = req.body;
 
 
-        db.query("INSERT INTO alarm_table (title, note, type, start_date, days, time) VALUES (?, ?, ?, ?, ?, ?)", [title, note, type, start_date, days, time], async (err, result) => {
+        db.query("INSERT INTO alarm_table (title, note, url, type, start_date, days, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [title, note, url, type, start_date, days, time], async (err, result) => {
             if (err) {
                 console.log(err)
                 response(req, res, -200, "알람 추가 실패", [])
             }
             else {
                 if (type == 0) {
-                    sendAlarm(title, note, "alarm", result.insertId);
+                    sendAlarm(title, note, "alarm", result.insertId, url);
                     insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, note, "alarm", result.insertId])
                 }
                 await db.query("UPDATE alarm_table SET sort=? WHERE pk=?", [result.insertId, result.insertId], (err, result) => {
@@ -77,8 +77,8 @@ const addAlarm = (req, res) => {
 const updateAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
-        const { title, note, type, start_date, days, time, pk } = req.body;
-        db.query("UPDATE alarm_table SET title=?, note=?, type=?, start_date=?, days=?, time=? WHERE pk=?", [title, note, type, start_date, days, time, pk], (err, result) => {
+        const { title, note,url, type, start_date, days, time, pk } = req.body;
+        db.query("UPDATE alarm_table SET title=?, note=?, url=?, type=?, start_date=?, days=?, time=? WHERE pk=?", [title, note, url, type, start_date, days, time, pk], (err, result) => {
             if (err) {
                 console.log(err)
                 response(req, res, -200, "알람 수정 실패", [])
@@ -1143,6 +1143,23 @@ const addOneEvent = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const getKoreaByEng = (str) =>{
+    let ans = "";
+    if(str=='oneword'){
+        ans="하루1단어: ";
+    }else if(str=='oneevent'){
+        ans="하루1종목: ";
+    }else if(str=='theme'){
+        ans="핵심테마: ";
+    }else if(str=='strategy'){
+        ans="전문가칼럼: ";
+    }else if(str=='issue'){
+        ans="핵심이슈: ";
+    }else if(str=='feature'){
+        ans="특징주: ";
+    }
+    return ans;
+}
 const addItem = (req, res) => {
     try {
         const { title, hash, suggest_title, note, user_pk, table, category, font_color, background_color } = req.body;
@@ -1175,6 +1192,7 @@ const addItem = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
             } else {
+                sendAlarm(`${getKoreaByEng(table)+title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
                 await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
                         console.log(err)
@@ -1467,7 +1485,7 @@ const addNotice = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                sendAlarm(title, "", "notice", result.insertId);
+                sendAlarm("공지사항: "+title, "", "notice", result.insertId);
                 //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, "", "notice", result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {

@@ -11,15 +11,16 @@ const fcmServerKey = "AAAA35TttWk:APA91bGLGZjdD2fgaPRh8eYyu9CDSndD97ZdO4MBypbpIC
 firebase.initializeApp({
     credential: firebase.credential.cert(serviceAccount)
 });
-const sendAlarm = (title, note, table, pk) => {
+const sendAlarm = (title, note, table, pk, url) => {
     let fcm = new fcmNode(fcmServerKey)
     let message = {
         to: '/topics/' + 'weare',
         "click_action": "FLUTTER_NOTIFICATION_CLICK",
         "priority": "high",
         notification: {
-            title: (table == 'notice' ? '공지사항: ' : '') + title,
+            title: title,
             body: note,
+            url: url ?? '/',
             click_action: "FLUTTER_NOTIFICATION_CLICK",
             badge: "1",
             "sound": "default"
@@ -27,7 +28,8 @@ const sendAlarm = (title, note, table, pk) => {
         data: {
             table: table,
             pk: pk.toString(),
-            title: (table == 'notice' ? '공지사항 ' : '') + title,
+            url: url ?? '/',
+            title: title,
             body: note,
         }
     }
