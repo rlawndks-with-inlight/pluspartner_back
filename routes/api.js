@@ -363,7 +363,15 @@ const editMyInfo = (req, res) => {
 }
 const onResign = (req, res) => {
     try {
-        console.log(req.body)
+        let {id} = req.body;
+        db.query("DELETE FROM user_table WHERE id=?",[id],(err, result)=>{
+            if (err) {
+                console.log(err)
+                return response(req, res, -100, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
     } catch (e) {
         console.log(e)
         return response(req, res, -200, "서버 에러 발생", [])
