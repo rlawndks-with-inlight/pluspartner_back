@@ -45,7 +45,7 @@ router.get('/', (req, res) => {
 const addAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
-        const { title, note,url, type, start_date, days, time } = req.body;
+        const { title, note, url, type, start_date, days, time } = req.body;
 
 
         db.query("INSERT INTO alarm_table (title, note, url, type, start_date, days, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [title, note, url, type, start_date, days, time], async (err, result) => {
@@ -77,7 +77,7 @@ const addAlarm = (req, res) => {
 const updateAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
-        const { title, note,url, type, start_date, days, time, pk } = req.body;
+        const { title, note, url, type, start_date, days, time, pk } = req.body;
         db.query("UPDATE alarm_table SET title=?, note=?, url=?, type=?, start_date=?, days=?, time=? WHERE pk=?", [title, note, url, type, start_date, days, time, pk], (err, result) => {
             if (err) {
                 console.log(err)
@@ -356,6 +356,14 @@ const editMyInfo = (req, res) => {
         })
 
 
+    } catch (e) {
+        console.log(e)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const onResign = (req, res) => {
+    try {
+        console.log(req.body)
     } catch (e) {
         console.log(e)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -1143,20 +1151,20 @@ const addOneEvent = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getKoreaByEng = (str) =>{
+const getKoreaByEng = (str) => {
     let ans = "";
-    if(str=='oneword'){
-        ans="하루1단어: ";
-    }else if(str=='oneevent'){
-        ans="하루1종목: ";
-    }else if(str=='theme'){
-        ans="핵심테마: ";
-    }else if(str=='strategy'){
-        ans="전문가칼럼: ";
-    }else if(str=='issue'){
-        ans="핵심이슈: ";
-    }else if(str=='feature'){
-        ans="특징주: ";
+    if (str == 'oneword') {
+        ans = "하루1단어: ";
+    } else if (str == 'oneevent') {
+        ans = "하루1종목: ";
+    } else if (str == 'theme') {
+        ans = "핵심테마: ";
+    } else if (str == 'strategy') {
+        ans = "전문가칼럼: ";
+    } else if (str == 'issue') {
+        ans = "핵심이슈: ";
+    } else if (str == 'feature') {
+        ans = "특징주: ";
     }
     return ans;
 }
@@ -1192,7 +1200,7 @@ const addItem = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
             } else {
-                sendAlarm(`${getKoreaByEng(table)+title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
+                sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
                 await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
                         console.log(err)
@@ -1485,7 +1493,7 @@ const addNotice = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                sendAlarm("공지사항: "+title, "", "notice", result.insertId);
+                sendAlarm("공지사항: " + title, "", "notice", result.insertId);
                 //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, "", "notice", result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
@@ -1926,5 +1934,5 @@ module.exports = {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
-    deleteItem,
+    deleteItem, onResign,
 };

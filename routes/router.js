@@ -6,7 +6,7 @@ const {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
-    deleteItem,
+    deleteItem, onResign,
 } = require('./api')
 
 router.post('/addalarm', addAlarm);
@@ -45,6 +45,7 @@ router.post('/addfeaturecategory', upload.single('content'), addFeatureCategory)
 router.post('/updatefeaturecategory', upload.single('content'), updateFeatureCategory);
 router.post('/addimage', upload.single('note'), addNoteImage);
 router.post('/deleteitem', deleteItem);
+router.post('/resign', onResign);
 router.post('/updateuser', updateUser);
 router.get('/onsearchallitem', onSearchAllItem);
 router.get('/oneword', getOneWord);
