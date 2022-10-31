@@ -203,12 +203,12 @@ const onLoginById = async (req, res) => {
                                 return response(req, res, -200, "서버 에러 발생", [])
                             }
                         } else {
-                            return response(req, res, -100, "없는 회원입니다.", [])
+                            return response(req, res, -100, "아이디 또는 비밀번호를 확인해주세요.", [])
 
                         }
                     })
                 } else {
-                    return response(req, res, -100, "없는 회원입니다.", [])
+                    return response(req, res, -100, "아이디 또는 비밀번호를 확인해주세요.", [])
                 }
             }
         })
@@ -671,7 +671,7 @@ const getUsers = (req, res) => {
 
 const updateUser = (req, res) => {
     try {
-
+        
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
