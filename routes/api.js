@@ -106,12 +106,25 @@ const onSignUp = async (req, res) => {
         const type_num = req.body.type_num ?? 0;
         const profile_img = req.body.profile_img ?? "";
         //중복 체크 
-        let sql = "SELECT * FROM user_table WHERE id=?"
+        let sql = "SELECT * FROM user_table WHERE id=? OR nickname=?"
 
-        db.query(sql, [id], (err, result) => {
-            if (result.length > 0)
-                response(req, res, -200, "ID가 중복됩니다.", [])
-            else {
+        db.query(sql, [id, nickname], (err, result) => {
+            if (result.length > 0){
+                let same_type = "";
+                for(var i = 0;i<result.length;i++){
+                    if(result[i].id==id){
+                        same_type = "아이디";
+                        break;
+                    }
+                    if(result[i].nickname==nickname){
+                        same_type = "닉네임";
+                        break;
+                    }
+                }
+                if(i!=result.length){
+                    return response(req, res, -200, `${same_type}가 중복됩니다.`, [])
+                }
+            }else {
                 crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                     // bcrypt.hash(pw, salt, async (err, hash) => {
                     let hash = decoded.toString('base64')
