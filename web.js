@@ -86,7 +86,7 @@ const scheduleAlarm = () => {
 
                                 if (item_time >= time && item_time < overFiveTime) {
                                         sendAlarm(list[i].title, list[i].note, "alarm", list[i].pk, list[i].url);
-                                        insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [list[i].title, list[i].note, "alarm", list[i].pk])
+                                        insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [list[i].title, list[i].note, "alarm", list[i].pk, list[i].url])
                                 }
                         }
                 }

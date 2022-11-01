@@ -56,7 +56,7 @@ const addAlarm = (req, res) => {
             else {
                 if (type == 0) {
                     sendAlarm(title, note, "alarm", result.insertId, url);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, note, "alarm", result.insertId])
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [title, note, "alarm", result.insertId, url])
                 }
                 await db.query("UPDATE alarm_table SET sort=? WHERE pk=?", [result.insertId, result.insertId], (err, result) => {
                     if (err) {
@@ -622,12 +622,16 @@ const getUsers = (req, res) => {
         let pageSql = "SELECT COUNT(*) FROM user_table ";
         let page_cut = req.query.page_cut;
         let status = req.query.status;
+        let keyword = req.query.keyword;
         let whereStr = " WHERE 1=1 ";
         if (req.query.level) {
             whereStr += ` AND user_level=${req.query.level} `;
         }
         if (status) {
             whereStr += ` AND status=${status} `;
+        }
+        if (keyword) {
+            whereStr += ` AND (id LIKE '%${keyword}%' OR name LIKE '%${keyword}%' OR nickname LIKE '%${keyword}%')`;
         }
         if (!page_cut) {
             page_cut = 15
@@ -669,9 +673,41 @@ const getUsers = (req, res) => {
     }
 }
 
-const updateUser = (req, res) => {
+const updateUser = async (req, res) => {
     try {
-        
+        const id = req.body.id ?? "";
+        let pw = req.body.pw ?? "";
+        const name = req.body.name ?? "";
+        const nickname = req.body.nickname ?? "";
+        const phone = req.body.phone ?? "";
+        const user_level = req.body.user_level ?? 0;
+        const pk = req.body.pk ?? 0;
+        if(pw){
+            await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+                // bcrypt.hash(pw, salt, async (err, hash) => {
+                let hash = decoded.toString('base64')
+                if (err) {
+                    console.log(err)
+                    response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
+                }else{
+                    await db.query("UPDATE user_table SET pw=? WHERE pk=?",[hash, pk],(err, result)=>{
+                        if (err) {
+                            console.log(err)
+                            return response(req, res, -200, "비밀번호 insert중 에러발생", [])
+                        } else {
+                        }
+                    })
+                }
+            })
+        }
+        await db.query("UPDATE user_table SET id=?, name=?, nickname=?, phone=?, user_level=? WHERE pk=?",[id,name,nickname,phone,user_level,pk],(err, result)=>{
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버에러발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
+            }
+        })
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -1191,7 +1227,7 @@ const getKoreaByEng = (str) => {
 }
 const addItem = (req, res) => {
     try {
-        const { title, hash, suggest_title, note, user_pk, table, category, font_color, background_color } = req.body;
+        const { title, hash, suggest_title, want_push, note, user_pk, table, category, font_color, background_color } = req.body;
         let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color];
         let columns = "(title, hash, suggest_title, note, user_pk, font_color, background_color";
         let values = "(?, ?, ?, ?, ?, ?, ?";
@@ -1221,7 +1257,9 @@ const addItem = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
             } else {
-                sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
+                if(want_push==1){
+                    sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
+                }
                 await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
                         console.log(err)
