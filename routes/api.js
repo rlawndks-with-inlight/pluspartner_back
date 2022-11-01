@@ -109,22 +109,22 @@ const onSignUp = async (req, res) => {
         let sql = "SELECT * FROM user_table WHERE id=? OR nickname=?"
 
         db.query(sql, [id, nickname], (err, result) => {
-            if (result.length > 0){
+            if (result.length > 0) {
                 let same_type = "";
-                for(var i = 0;i<result.length;i++){
-                    if(result[i].id==id){
+                for (var i = 0; i < result.length; i++) {
+                    if (result[i].id == id) {
                         same_type = "아이디";
                         break;
                     }
-                    if(result[i].nickname==nickname){
+                    if (result[i].nickname == nickname) {
                         same_type = "닉네임";
                         break;
                     }
                 }
-                if(i!=result.length){
+                if (i != result.length) {
                     return response(req, res, -200, `${same_type}가 중복됩니다.`, [])
                 }
-            }else {
+            } else {
                 crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                     // bcrypt.hash(pw, salt, async (err, hash) => {
                     let hash = decoded.toString('base64')
@@ -376,8 +376,8 @@ const editMyInfo = (req, res) => {
 }
 const onResign = (req, res) => {
     try {
-        let {id} = req.body;
-        db.query("DELETE FROM user_table WHERE id=?",[id],(err, result)=>{
+        let { id } = req.body;
+        db.query("DELETE FROM user_table WHERE id=?", [id], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -100, "서버 에러 발생", []);
@@ -682,15 +682,15 @@ const updateUser = async (req, res) => {
         const phone = req.body.phone ?? "";
         const user_level = req.body.user_level ?? 0;
         const pk = req.body.pk ?? 0;
-        if(pw){
+        if (pw) {
             await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                 // bcrypt.hash(pw, salt, async (err, hash) => {
                 let hash = decoded.toString('base64')
                 if (err) {
                     console.log(err)
                     response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
-                }else{
-                    await db.query("UPDATE user_table SET pw=? WHERE pk=?",[hash, pk],(err, result)=>{
+                } else {
+                    await db.query("UPDATE user_table SET pw=? WHERE pk=?", [hash, pk], (err, result) => {
                         if (err) {
                             console.log(err)
                             return response(req, res, -200, "비밀번호 insert중 에러발생", [])
@@ -700,7 +700,7 @@ const updateUser = async (req, res) => {
                 }
             })
         }
-        await db.query("UPDATE user_table SET id=?, name=?, nickname=?, phone=?, user_level=? WHERE pk=?",[id,name,nickname,phone,user_level,pk],(err, result)=>{
+        await db.query("UPDATE user_table SET id=?, name=?, nickname=?, phone=?, user_level=? WHERE pk=?", [id, name, nickname, phone, user_level, pk], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버에러발생", [])
@@ -1227,10 +1227,10 @@ const getKoreaByEng = (str) => {
 }
 const addItem = (req, res) => {
     try {
-        const { title, hash, suggest_title, want_push, note, user_pk, table, category, font_color, background_color } = req.body;
-        let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color];
-        let columns = "(title, hash, suggest_title, note, user_pk, font_color, background_color";
-        let values = "(?, ?, ?, ?, ?, ?, ?";
+        const { title, hash, suggest_title, want_push, note, user_pk, table, category, font_color, background_color, note_align } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color, note_align];
+        let columns = "(title, hash, suggest_title, note, user_pk, font_color, background_color, note_align";
+        let values = "(?, ?, ?, ?, ?, ?, ?, ?";
         if (category) {
             zColumn.push(category);
             columns += ', category_pk '
@@ -1257,7 +1257,7 @@ const addItem = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", []);
             } else {
-                if(want_push==1){
+                if (want_push == 1) {
                     sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
                 }
                 await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.insertId, result?.insertId], (err, resultup) => {
@@ -1278,9 +1278,9 @@ const addItem = (req, res) => {
 }
 const updateItem = (req, res) => {
     try {
-        const { title, hash, suggest_title, note, user_pk, table, category, font_color, background_color, pk } = req.body;
-        let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color];
-        let columns = " title=?, hash=?, suggest_title=?, note=?, user_pk=?, font_color=?, background_color=? ";
+        const { title, hash, suggest_title, note, user_pk, table, category, font_color, background_color, note_align, pk } = req.body;
+        let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color, note_align];
+        let columns = " title=?, hash=?, suggest_title=?, note=?, user_pk=?, font_color=?, background_color=?, note_align=? ";
         if (category) {
             zColumn.push(category);
             columns += ', category_pk=? '
@@ -1465,8 +1465,8 @@ const getItem = (req, res) => {
 
 const addVideo = (req, res) => {
     try {
-        const { user_pk, title, link, note, font_color, background_color, relate_video } = req.body;
-        db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color) VALUES (?, ?, ?, ?, ?, ?)", [user_pk, title, link, note, font_color, background_color], async (err, result) => {
+        const { user_pk, title, link, note, font_color, background_color, relate_video, note_align } = req.body;
+        db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color, note_align) VALUES (?, ?, ?, ?, ?, ?, ?)", [user_pk, title, link, note, font_color, background_color, note_align], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -1504,8 +1504,8 @@ const addVideo = (req, res) => {
 }
 const updateVideo = (req, res) => {
     try {
-        const { user_pk, title, link, note, font_color, background_color, relate_video, pk } = req.body;
-        db.query("UPDATE video_table SET user_pk=?, title=?, link=?, note=?, font_color=?, background_color=? WHERE pk=?", [user_pk, title, link, note, font_color, background_color, pk], async (err, result) => {
+        const { user_pk, title, link, note, font_color, background_color, relate_video, note_align, pk } = req.body;
+        db.query("UPDATE video_table SET user_pk=?, title=?, link=?, note=?, font_color=?, background_color=?, note_align=? WHERE pk=?", [user_pk, title, link, note, font_color, background_color, note_align, pk], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -1546,8 +1546,8 @@ const updateVideo = (req, res) => {
 }
 const addNotice = (req, res) => {
     try {
-        const { title, note, user_pk } = req.body;
-        db.query("INSERT INTO notice_table ( title, note,user_pk) VALUES (?, ?, ?)", [title, note, user_pk], async (err, result) => {
+        const { title, note, note_align, user_pk } = req.body;
+        db.query("INSERT INTO notice_table ( title, note, note_align, user_pk) VALUES (?, ?, ?)", [title, note, note_align, user_pk], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -1573,8 +1573,8 @@ const addNotice = (req, res) => {
 }
 const updateNotice = (req, res) => {
     try {
-        const { title, note, pk } = req.body;
-        db.query("UPDATE notice_table SET  title=?, note=? WHERE pk=?", [title, note, pk], (err, result) => {
+        const { title, note, note_align, pk } = req.body;
+        db.query("UPDATE notice_table SET  title=?, note=?, note_align=? WHERE pk=?", [title, note, note_align, pk], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
