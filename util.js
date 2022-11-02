@@ -130,9 +130,10 @@ const logRequestResponse = (req, res) => {
         file: req.file || req.files || null
     }
     request = JSON.stringify(request)
+    console.log(res)
     let response = JSON.stringify(res)
     // console.log(request)
-    // console.log(response)
+    console.log(response)
     const decode = checkLevel(req.cookies.token, 0)
     let user_pk = 0;
     let user_id = "";
@@ -143,8 +144,8 @@ const logRequestResponse = (req, res) => {
         user_pk = -1;
     }
     db.query(
-        "INSERT INTO log_table (request, response, request_ip, user_id, user_pk) VALUES (?, ?, ?, ?, ?)",
-        [request, response, requestIp, user_id, user_pk],
+        "INSERT INTO log_table (request, response, response_result, response_message, request_ip, user_id, user_pk) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [request, response, res?.result, res?.message, requestIp, user_id, user_pk],
         (err, result, fields) => {
             if (err)
                 console.log(err)
@@ -261,7 +262,7 @@ function response(req, res, code, message, data) {
         'message': message,
         'data': data,
     }
-    //logRequestResponse(req, resDict)
+    logRequestResponse(req, resDict)
     res.send(resDict);
 }
 function nullResponse(req, res) {
