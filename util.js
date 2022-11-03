@@ -262,7 +262,7 @@ function response(req, res, code, message, data) {
         'message': message,
         'data': data,
     }
-    if(code<0 || req.originalUrl.includes('login')){
+    if (code < 0 || req.originalUrl.includes('login')) {
         logRequestResponse(req, resDict);
     }
     res.send(resDict);

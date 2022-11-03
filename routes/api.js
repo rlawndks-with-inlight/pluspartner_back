@@ -412,24 +412,8 @@ const kakaoCallBack = (req, res) => {
             try {
                 const { data } = tmp;
                 const { id, properties } = data;
-                await db.query("SELECT * FROM user_table WHERE id=?", [id], async (err, result) => {
-                    if (err) {
-                        console.log(err);
-                        response(req, res, -100, "서버 에러 발생", [])
-                    } else {
-                        if (result.length > 0) {
-                            if (err) {
-                                console.log(err);
-                                response(req, res, -100, "서버 에러 발생", [])
-                            } else {
-                                response(req, res, 100, "기존유저", { phone: result[0]?.phone ?? "", pk: result[0]?.pk ?? 0 })
-                            }
-
-                        } else {
-                            response(req, res, 100, "신규유저", { id: id })
-                        }
-                    }
-                })
+                response(req, res, 100, "success", { id, properties});
+                
             } catch (e) {
                 console.log(e);
                 response(req, res, -100, "서버 에러 발생", [])
