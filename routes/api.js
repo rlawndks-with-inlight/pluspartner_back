@@ -106,23 +106,26 @@ const onSignUp = async (req, res) => {
         const type_num = req.body.type_num ?? 0;
         const profile_img = req.body.profile_img ?? "";
         //중복 체크 
-        let sql = "SELECT * FROM user_table WHERE id=? OR nickname=?"
+        let sql = "SELECT * FROM user_table WHERE id=? OR nickname=? OR user_level=-10 "
 
         db.query(sql, [id, nickname], (err, result) => {
             if (result.length > 0) {
-                let same_type = "";
+                let message = "";
                 for (var i = 0; i < result.length; i++) {
                     if (result[i].id == id) {
-                        same_type = "아이디";
+                        message = "아이디가 중복됩니다.";
                         break;
                     }
                     if (result[i].nickname == nickname) {
-                        same_type = "닉네임";
+                        message = "닉네임이 중복됩니다.";
                         break;
+                    }
+                    if(result[i].user_level == -10 && result[i].phone == phone){
+                        message = "가입할 수 없습니다."
                     }
                 }
                 if (i != result.length) {
-                    return response(req, res, -200, `${same_type}가 중복됩니다.`, [])
+                    return response(req, res, -200, message, [])
                 }
             } else {
                 crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
@@ -412,8 +415,8 @@ const kakaoCallBack = (req, res) => {
             try {
                 const { data } = tmp;
                 const { id, properties } = data;
-                response(req, res, 100, "success", { id, properties});
-                
+                response(req, res, 100, "success", { id, properties });
+
             } catch (e) {
                 console.log(e);
                 response(req, res, -100, "서버 에러 발생", [])
@@ -609,7 +612,11 @@ const getUsers = (req, res) => {
         let keyword = req.query.keyword;
         let whereStr = " WHERE 1=1 ";
         if (req.query.level) {
-            whereStr += ` AND user_level=${req.query.level} `;
+            if(req.query.level==0){
+                whereStr += ` AND user_level <= ${req.query.level} `;
+            }else{
+                whereStr += ` AND user_level=${req.query.level} `;
+            }
         }
         if (status) {
             whereStr += ` AND status=${status} `;
@@ -1088,8 +1095,8 @@ const getComments = (req, res) => {
 }
 const addComment = (req, res) => {
     try {
-        const { userPk, userNick, pk, title, note, category } = req.body;
-        db.query("INSERT INTO comment_table (user_pk,user_nickname,item_pk,item_title, note,category_pk) VALUES (?, ?, ?, ?, ?, ?)", [userPk, userNick, pk, title, note, category], (err, result) => {
+        const { userPk, userNick, pk, parentPk, title, note, category } = req.body;
+        db.query("INSERT INTO comment_table (user_pk, user_nickname, item_pk, item_title, note, category_pk, parent_pk) VALUES (?, ?, ?, ?, ?, ?, ?)", [userPk, userNick, pk, title, note, category, parentPk], (err, result) => {
             if (err) {
                 console.log(err)
                 response(req, res, -200, "fail", [])
@@ -1678,7 +1685,9 @@ const getItems = (req, res) => {
 
         let whereStr = " WHERE 1=1 ";
         if (level) {
+           
             whereStr += ` AND user_level=${level} `;
+            
         }
         if (category_pk) {
             whereStr += ` AND category_pk=${category_pk} `;
@@ -1690,7 +1699,11 @@ const getItems = (req, res) => {
             whereStr += ` AND user_pk=${user_pk} `;
         }
         if (keyword) {
-            whereStr += ` AND title LIKE '%${keyword}%' `;
+            if(table=='comment'){
+                whereStr += ` AND (item_title LIKE '%${keyword}%' OR user_nickname LIKE '%${keyword}%' OR note LIKE '%${keyword}%') `;
+            }else{
+                whereStr += ` AND title LIKE '%${keyword}%' `;
+            }
         }
         if (!page_cut) {
             page_cut = 15;
