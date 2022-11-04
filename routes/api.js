@@ -106,26 +106,28 @@ const onSignUp = async (req, res) => {
         const type_num = req.body.type_num ?? 0;
         const profile_img = req.body.profile_img ?? "";
         //중복 체크 
-        let sql = "SELECT * FROM user_table WHERE id=? OR nickname=? OR user_level=-10 "
+        let sql = "SELECT * FROM user_table WHERE id=? OR nickname=? OR user_level=? "
 
-        db.query(sql, [id, nickname], (err, result) => {
+        db.query(sql, [id, nickname, -10], (err, result) => {
             if (result.length > 0) {
-                let message = "";
-                for (var i = 0; i < result.length; i++) {
+                let msg = "";
+                let i = 0;
+                for (i = 0; i < result.length; i++) {
                     if (result[i].id == id) {
-                        message = "아이디가 중복됩니다.";
+                        msg = "아이디가 중복됩니다.";
                         break;
                     }
                     if (result[i].nickname == nickname) {
-                        message = "닉네임이 중복됩니다.";
+                        msg = "닉네임이 중복됩니다.";
                         break;
                     }
                     if(result[i].user_level == -10 && result[i].phone == phone){
-                        message = "가입할 수 없습니다."
+                        msg = "가입할 수 없습니다.";
+                        break;
                     }
                 }
                 if (i != result.length) {
-                    return response(req, res, -200, message, [])
+                    return response(req, res, -200, msg, [])
                 }
             } else {
                 crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
@@ -224,7 +226,6 @@ const onLoginById = async (req, res) => {
 const onLoginBySns = (req, res) => {
     try {
         let { id, typeNum, name, nickname, phone, user_level, profile_img } = req.body;
-        console.log(req.body)
         db.query("SELECT * FROM user_table WHERE id=? AND type=?", [id, typeNum], async (err, result) => {
             if (err) {
                 console.log(err)
@@ -1000,10 +1001,8 @@ const getVideo = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                console.log(result)
                 let relate_video = JSON.parse(result[0].relate_video);
                 relate_video = relate_video.join();
-                console.log(relate_video)
                 await db.query(`SELECT title,date,pk FROM video_table WHERE pk IN (${relate_video})`, (err, result2) => {
                     if (err) {
                         console.log(err)
@@ -1905,12 +1904,9 @@ const getCountNotReadNoti = async (req, res) => {
         let notice_ai = await getTableAI("notice").result - 1;
         let alarm_ai = await getTableAI("alarm").result - 1;
         let mac = mac_adress;
-        console.log(notice_ai.result);
-        console.log(alarm_ai.result);
         if (!pk && !mac_adress) {
             mac = await new Promise((resolve, reject) => {
                 macaddress.one(function (err, mac) {
-                    console.log(`MacAddress 주소 : ${mac}`);
                     if (err) {
                         console.log(err)
                         reject({
