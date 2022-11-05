@@ -74,6 +74,30 @@ const addAlarm = (req, res) => {
         response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const getNoticeAndAlarmLastPk = (req, res) => {
+    try {
+        db.query("SELECT * FROM alarm_log_table ORDER BY pk DESC LIMIT 1", async (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버에러발생", [])
+            }
+            else {
+                await db.query("SELECT * FROM notice_table ORDER BY pk DESC LIMIT 1", (err, result2) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "서버에러발생", [])
+
+                    }
+                    else {
+                        return response(req, res, 100, "success", { alarm_last_pk: result[0]?.pk ?? 0, notice_last_pk: result2[0]?.pk ?? 0 })
+                    }
+                })
+            }
+        })
+    } catch (e) {
+
+    }
+}
 const updateAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
@@ -121,7 +145,7 @@ const onSignUp = async (req, res) => {
                         msg = "닉네임이 중복됩니다.";
                         break;
                     }
-                    if(result[i].user_level == -10 && result[i].phone == phone){
+                    if (result[i].user_level == -10 && result[i].phone == phone) {
                         msg = "가입할 수 없습니다.";
                         break;
                     }
@@ -613,9 +637,9 @@ const getUsers = (req, res) => {
         let keyword = req.query.keyword;
         let whereStr = " WHERE 1=1 ";
         if (req.query.level) {
-            if(req.query.level==0){
+            if (req.query.level == 0) {
                 whereStr += ` AND user_level <= ${req.query.level} `;
-            }else{
+            } else {
                 whereStr += ` AND user_level=${req.query.level} `;
             }
         }
@@ -1537,7 +1561,7 @@ const updateVideo = (req, res) => {
 const addNotice = (req, res) => {
     try {
         const { title, note, note_align, user_pk } = req.body;
-        db.query("INSERT INTO notice_table ( title, note, note_align, user_pk) VALUES (?, ?, ?)", [title, note, note_align, user_pk], async (err, result) => {
+        db.query("INSERT INTO notice_table ( title, note, note_align, user_pk) VALUES (?, ?, ?, ?)", [title, note, note_align, user_pk], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
@@ -1684,9 +1708,9 @@ const getItems = (req, res) => {
 
         let whereStr = " WHERE 1=1 ";
         if (level) {
-           
+
             whereStr += ` AND user_level=${level} `;
-            
+
         }
         if (category_pk) {
             whereStr += ` AND category_pk=${category_pk} `;
@@ -1698,9 +1722,9 @@ const getItems = (req, res) => {
             whereStr += ` AND user_pk=${user_pk} `;
         }
         if (keyword) {
-            if(table=='comment'){
+            if (table == 'comment') {
                 whereStr += ` AND (item_title LIKE '%${keyword}%' OR user_nickname LIKE '%${keyword}%' OR note LIKE '%${keyword}%') `;
-            }else{
+            } else {
                 whereStr += ` AND title LIKE '%${keyword}%' `;
             }
         }
@@ -1983,7 +2007,7 @@ const setCountNotReadNoti = async (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem, onResign,
