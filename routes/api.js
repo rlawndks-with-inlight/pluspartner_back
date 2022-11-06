@@ -1667,8 +1667,14 @@ const getAllPosts = async (req, res) => {
             return b.date - a.date;
         })
         let maxPage = makeMaxPage(result.length, page_cut);
-        result = result.slice((page-1)*page_cut, (page)*page_cut)
-        return response(req, res, 100, "success", { data: result, maxPage: maxPage });
+        let result_obj = {};
+        if(page){
+            result = result.slice((page-1)*page_cut, (page)*page_cut)
+            result_obj = { data: result, maxPage: maxPage };
+        }else{
+            result_obj = result;
+        }
+        return response(req, res, 100, "success", result_obj);
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
