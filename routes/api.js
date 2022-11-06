@@ -31,6 +31,7 @@ const salt = "435f5ef2ffb83a632c843926b35ae7855bc2520021a73a043db41670bfaeb722"
 const saltRounds = 10
 const pwBytes = 64
 const jwtSecret = "djfudnsqlalfKeyFmfRkwu"
+const { format, formatDistance, formatRelative, subDays } = require('date-fns')
 const geolocation = require('geolocation')
 const kakaoOpt = {
     clientId: '4a8d167fa07331905094e19aafb2dc47',
@@ -729,15 +730,7 @@ const updateUser = async (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getUserStatistics = (req, res) => {
-    try {
 
-    }
-    catch (err) {
-        console.log(err)
-        return response(req, res, -200, "서버 에러 발생", [])
-    }
-}
 const addMaster = (req, res) => {
     try {
         const id = req.body.id ?? "";
@@ -1646,6 +1639,7 @@ const getAllPosts = async (req, res) => {
             { table: 'issue', category_num:4 },
             { table: 'feature', category_num:5 },
             { table: 'video', category_num:6 },
+            { table: 'notice', category_num:7 },
         ]
         for (var i = 0; i < sql_obj.length; i++) {
             let sql = "";
@@ -1673,6 +1667,135 @@ const getAllPosts = async (req, res) => {
             result_obj = { data: result, maxPage: maxPage };
         }else{
             result_obj = result;
+        }
+        return response(req, res, 100, "success", result_obj);
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+function getDateRangeData(param1, param2){  //param1은 시작일, param2는 종료일이다.
+	var res_day = [];
+ 	var ss_day = new Date(param1);
+   	var ee_day = new Date(param2);    	
+  		while(ss_day.getTime() <= ee_day.getTime()){
+  			var _mon_ = (ss_day.getMonth()+1);
+  			_mon_ = _mon_ < 10 ? '0'+_mon_ : _mon_;
+  			var _day_ = ss_day.getDate();
+  			_day_ = _day_ < 10 ? '0'+_day_ : _day_;
+   			res_day.push(ss_day.getFullYear() + '-' + _mon_ + '-' +  _day_);
+   			ss_day.setDate(ss_day.getDate() + 1);
+   	}
+   	return res_day;
+}
+const getUserStatistics = async (req, res) => {
+    try {
+        let {page, page_cut, year, type} = req.query;
+        console.log(req.query)
+        if (!page_cut) {
+            page_cut = 15;
+        }
+        let dates = [];
+        let format = '';
+        if(type=='month'){
+            let last_month = 0;
+            if(returnMoment().substring(0,4)==year){
+                last_month = parseInt(returnMoment().substring(5,7));
+            }else{
+                last_month = 12;
+            }
+            for(var i=1;i<=last_month;i++){
+                if(year=='2022'){
+                    if(i>=8){
+                        dates.push(`${year}-${i<10?`0${i}`:i}`);
+                    }
+                }else{
+                    dates.push(`${year}-${i<10?`0${i}`:i}`);
+                }
+            }
+            format = '%Y-%m';
+        }else{
+            if(year == returnMoment().substring(0,4)){
+                dates = getDateRangeData(new Date(`${year}-${year=='2022'?'08':'01'}-01`),new Date(returnMoment().substring(0,10)));
+            }else{
+                dates = getDateRangeData(new Date(`${year}-${year=='2022'?'08':'01'}-01`),new Date(`${year}-12-31`));
+            }
+            format = '%Y-%m-%d';
+        }
+        dates = dates.reverse();
+        let date_index_obj = {};
+        for(var i =0;i<dates.length;i++){
+            date_index_obj[dates[i]] = i;
+        }
+        let sql_list = [];
+        let sql_obj = [
+            {table:'user',date_colomn:'user_date',count_column:'user_count'},
+            {table:'oneword',date_colomn:'post_date',count_column:'post_count'},
+            {table:'oneevent',date_colomn:'post_date',count_column:'post_count'},
+            {table:'theme',date_colomn:'post_date',count_column:'post_count'},
+            {table:'strategy',date_colomn:'post_date',count_column:'post_count'},
+            {table:'issue',date_colomn:'post_date',count_column:'post_count'},
+            {table:'feature',date_colomn:'post_date',count_column:'post_count'},
+            {table:'video',date_colomn:'post_date',count_column:'post_count'},
+            {table:'notice',date_colomn:'post_date',count_column:'post_count'},
+            {table:'comment',date_colomn:'comment_date',count_column:'comment_count'},
+        ]
+        for (var i = 0; i < sql_obj.length; i++) {
+            let sql = "";
+            sql = `SELECT DATE_FORMAT(date, '${format}') AS ${sql_obj[i].date_colomn}, COUNT(DATE_FORMAT(date, '${format}')) AS ${sql_obj[i].count_column} FROM ${sql_obj[i].table}_table WHERE SUBSTR(DATE, 1, 4)=${year} GROUP BY DATE_FORMAT(date, '${format}') ORDER BY ${sql_obj[i].date_colomn} DESC`;
+            sql_list.push(queryPromise(sql_obj[i].table, sql));
+        }
+        for (var i = 0; i < sql_list.length; i++) {
+            await sql_list[i];
+        }
+        let result = (await when(sql_list));
+        let result_list = [];
+        for(var i = 0;i<dates.length;i++){
+            result_list.push({
+                date:dates[i],
+                user_count:0,
+                visit_count:0,
+                post_count:0,
+                comment_count:0,
+                views_count:0
+            })
+        }
+        
+        for(var i = 0;i<result.length;i++){
+            let date_column = ``;
+            let count_column = ``;
+            if((await result[i])?.table=='user'){
+                date_column = `user_date`;
+                count_column = `user_count`;
+            }else if((await result[i])?.table=='comment'){
+                date_column = `comment_date`;
+                count_column = `comment_count`;
+            }else if((await result[i])?.table=='views'){
+                date_column = `views_date`;
+                count_column = `views_count`;
+            }else if((await result[i])?.table=='visit'){
+                date_column = `visit_date`;
+                count_column = `visit_count`;
+            }else{
+                date_column = `post_date`;
+                count_column = `post_count`;
+            }
+            let data_list = (await result[i])?.data;
+            if(data_list.length>0){
+                console.log(data_list)
+                for(var j = 0 ; j< data_list.length ; j++ ){
+                    result_list[date_index_obj[data_list[j][date_column]]][count_column] += data_list[j][count_column]
+                }     
+            }
+           
+        }
+        let maxPage = makeMaxPage(result_list.length, page_cut);
+        let result_obj = {};
+        if(page){
+            result_list = result_list.slice((page-1)*page_cut, (page)*page_cut)
+            result_obj = { data: result_list, maxPage: maxPage };
+        }else{
+            result_obj = result_list;
         }
         return response(req, res, 100, "success", result_obj);
     } catch (err) {
@@ -2019,7 +2142,7 @@ const setCountNotReadNoti = async (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem, onResign,
