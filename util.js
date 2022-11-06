@@ -111,7 +111,13 @@ const nullRequestParamsOrBody = {
     code: 400,
     message: "입력이 잘못되었습니다.(요청 데이터 확인)"
 }
-
+const makeMaxPage = (num, page_cut) =>{
+    if(num%page_cut==0){
+        return num/page_cut;
+    }else{
+        return parseInt(num/page_cut) + 1;
+    }
+}
 const logRequestResponse = (req, res) => {
 
     let requestIp;
@@ -291,5 +297,5 @@ module.exports = {
     logRequestResponse, logResponse, logRequest,
     getUserPKArrStrWithNewPK, isNotNullOrUndefined,
     namingImagesPath, getSQLnParams,
-    nullResponse, lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber, sendAlarm
+    nullResponse, lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber, sendAlarm, makeMaxPage
 }

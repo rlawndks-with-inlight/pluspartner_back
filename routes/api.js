@@ -12,7 +12,7 @@ const when = require('when')
 
 const { checkLevel, getSQLnParams, getUserPKArrStrWithNewPK,
     isNotNullOrUndefined, namingImagesPath, nullResponse,
-    lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber, sendAlarm
+    lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber, sendAlarm, makeMaxPage
 } = require('../util')
 const {
     getRowsNumWithKeyword, getRowsNum, getAllDatas,
@@ -23,7 +23,7 @@ const macaddress = require('node-macaddress');
 
 const db = require('../config/db')
 const { upload } = require('../config/multerConfig')
-const { Console } = require('console')
+const { Console, table } = require('console')
 const { abort } = require('process')
 const axios = require('axios')
 //const { pbkdf2 } = require('crypto')
@@ -940,7 +940,7 @@ const getHomeContent = async (req, res) => {
             'SELECT pk, title, hash, main_img, font_color, background_color, date FROM strategy_table WHERE status=1 ORDER BY sort DESC LIMIT 3',
             'SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 ORDER BY sort DESC LIMIT 5',
             'SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 ORDER BY sort DESC LIMIT 5'];
-        
+
         for (var i = 0; i < sql_list.length; i++) {
             result_list.push(queryPromise('', sql_list[i]));
         }
@@ -1631,6 +1631,49 @@ const onSearchAllItem = async (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const getAllPosts = async (req, res) => {
+    try {
+        let { keyword, page, order, page_cut } = req.query;
+        if (!page_cut) {
+            page_cut = 15;
+        }
+        let sql_list = [];
+        let sql_obj = [
+            { table: 'oneword', category_num:0 },
+            { table: 'oneevent' , category_num:1},
+            { table: 'theme', category_num:2 },
+            { table: 'strategy', category_num:3 },
+            { table: 'issue', category_num:4 },
+            { table: 'feature', category_num:5 },
+            { table: 'video', category_num:6 },
+        ]
+        for (var i = 0; i < sql_obj.length; i++) {
+            let sql = "";
+            sql = `SELECT ${sql_obj[i].table}_table.*, '${sql_obj[i].table}' AS category, (SELECT COUNT(*)  FROM comment_table WHERE comment_table.item_pk=${sql_obj[i].table}_table.pk AND comment_table.category_pk=${sql_obj[i].category_num}) AS comment_num, user_table.nickname FROM ${sql_obj[i].table}_table LEFT JOIN user_table ON ${sql_obj[i].table}_table.user_pk=user_table.pk `;
+            if(keyword){
+                sql += ` WHERE (${sql_obj[i].table}_table.title LIKE "%${keyword}%" OR user_table.nickname LIKE "%${keyword}%")`;
+            }
+            sql_list.push(queryPromise(sql_obj[i].table, sql));
+        }
+        for (var i = 0; i < sql_list.length; i++) {
+            await sql_list[i];
+        }
+        let result_ = (await when(sql_list));
+        let result = [];
+        for(var i =0; i< result_.length;i++){
+            result = [...result, ...(await result_[i])?.data ?? []];
+        }
+        result = result.sort(function(a, b){
+            return b.date - a.date;
+        })
+        let maxPage = makeMaxPage(result.length, page_cut);
+        result = result.slice((page-1)*page_cut, (page)*page_cut)
+        return response(req, res, 100, "success", { data: result, maxPage: maxPage });
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const getOneWord = (req, res) => {
     try {
         db.query("SELECT * FROM oneword_table ORDER BY sort DESC LIMIT 1", (err, result) => {
@@ -1732,30 +1775,7 @@ const getItems = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getAllSchema = (req, res) => {
-    try {
-        let table_list = ['oneword', 'oneevent', 'strategy'];
-        let sql = "";
-        for (var i = 0; i < table_list.length; i++) {
-            if (i != 0) {
-                sql += ` UNION ALL `;
-            }
-            sql += `SELECT * FROM ${table_list[i]}_table `;
-        }
-        console.log(sql);
-        db.query(sql, (err, result) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "서버 에러 발생", [])
-            } else {
-                return response(req, res, 100, "success", result)
-            }
-        })
-    } catch (err) {
-        console.log(err)
-        return response(req, res, -200, "서버 에러 발생", [])
-    }
-}
+
 const getSetting = (req, res) => {
     try {
         db.query("SELECT * FROM setting_table ORDER BY pk DESC LIMIT 1", (err, result) => {
@@ -1993,7 +2013,7 @@ const setCountNotReadNoti = async (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllSchema,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem, onResign,
