@@ -95,7 +95,6 @@ const scheduleAlarm = () => {
 if (is_test) {
         http.createServer(app).listen(HTTP_PORT, function () {
                 console.log("Server on " + HTTP_PORT)
-                scheduleAlarm();
         });
 
 } else {

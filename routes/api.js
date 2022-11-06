@@ -8,6 +8,7 @@ router.use(express.json())
 const crypto = require('crypto')
 //const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const when = require('when')
 
 const { checkLevel, getSQLnParams, getUserPKArrStrWithNewPK,
     isNotNullOrUndefined, namingImagesPath, nullResponse,
@@ -35,7 +36,6 @@ const kakaoOpt = {
     clientId: '4a8d167fa07331905094e19aafb2dc47',
     redirectUri: 'http://172.30.1.19:8001/api/kakao/callback',
 };
-
 router.get('/', (req, res) => {
     console.log("back-end initialized")
     res.send('back-end initialized')
@@ -928,73 +928,27 @@ const updateChannel = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getHomeContent = (req, res) => {
+const getHomeContent = async (req, res) => {
     try {
-        db.query('SELECT * FROM setting_table ORDER BY pk DESC LIMIT 1', async (err, result_1) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "서버 에러 발생", [])
-            } else {
-                await db.query('SELECT * FROM user_table WHERE user_level=30 AND status=1 ORDER BY sort DESC', async (err, result0) => {
-                    if (err) {
-                        console.log(err)
-                        return response(req, res, -200, "서버 에러 발생", [])
-                    } else {
-                        await db.query('SELECT pk, title, hash FROM oneword_table WHERE status=1 ORDER BY sort DESC LIMIT 1', async (err, result1) => {
-                            if (err) {
-                                console.log(err)
-                                return response(req, res, -200, "서버 에러 발생", [])
-                            } else {
-                                await db.query('SELECT pk, title, hash FROM oneevent_table WHERE status=1 ORDER BY sort DESC LIMIT 1', async (err, result2) => {
-                                    if (err) {
-                                        console.log(err)
-                                        return response(req, res, -200, "서버 에러 발생", [])
-                                    } else {
-                                        await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result3) => {
-                                            if (err) {
-                                                console.log(err)
-                                                return response(req, res, -200, "서버 에러 발생", [])
-                                            } else {
-                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result4) => {
-                                                    if (err) {
-                                                        console.log(err)
-                                                        return response(req, res, -200, "서버 에러 발생", [])
-                                                    } else {
-                                                        await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM strategy_table WHERE status=1 ORDER BY sort DESC LIMIT 3', async (err, result5) => {
-                                                            if (err) {
-                                                                console.log(err)
-                                                                return response(req, res, -200, "서버 에러 발생", [])
-                                                            } else {
-                                                                await db.query('SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result6) => {
-                                                                    if (err) {
-                                                                        console.log(err)
-                                                                        return response(req, res, -200, "서버 에러 발생", [])
-                                                                    } else {
-                                                                        await db.query('SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 ORDER BY sort DESC LIMIT 5', async (err, result7) => {
-                                                                            if (err) {
-                                                                                console.log(err)
-                                                                                return response(req, res, -200, "서버 에러 발생", [])
-                                                                            } else {
-                                                                                return response(req, res, 100, "success", { setting: result_1[0], masters: result0, oneWord: result1[0], oneEvent: result2[0], issues: result3, themes: result4, strategies: result5, features: result6, videos: result7 })
-                                                                            }
-                                                                        })
-                                                                    }
-                                                                })
-                                                            }
-                                                        })
-                                                    }
-                                                })
-                                            }
-                                        })
-                                    }
-                                })
-                            }
-                        })
-                    }
-                })
-            }
-        })
-
+        let result_list = [];
+        let sql_list = ['SELECT * FROM setting_table ORDER BY pk DESC LIMIT 1',
+            'SELECT * FROM user_table WHERE user_level=30 AND status=1 ORDER BY sort DESC',
+            'SELECT pk, title, hash FROM oneword_table WHERE status=1 ORDER BY sort DESC LIMIT 1',
+            'SELECT pk, title, hash FROM oneevent_table WHERE status=1 ORDER BY sort DESC LIMIT 1',
+            'SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 ORDER BY sort DESC LIMIT 5',
+            'SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 ORDER BY sort DESC LIMIT 5',
+            'SELECT pk, title, hash, main_img, font_color, background_color, date FROM strategy_table WHERE status=1 ORDER BY sort DESC LIMIT 3',
+            'SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 ORDER BY sort DESC LIMIT 5',
+            'SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 ORDER BY sort DESC LIMIT 5'];
+        
+        for (var i = 0; i < sql_list.length; i++) {
+            result_list.push(queryPromise('', sql_list[i]));
+        }
+        for (var i = 0; i < result_list.length; i++) {
+            await result_list[i];
+        }
+        let result = (await when(result_list));
+        return response(req, res, 100, "success", { setting: (await result[0])?.data[0] ?? {}, masters: (await result[1])?.data ?? [], oneWord: (await result[2])?.data[0] ?? {}, oneEvent: (await result[3])?.data[0] ?? {}, issues: (await result[4])?.data ?? [], themes: (await result[5])?.data ?? [], strategies: (await result[6])?.data ?? [], features: (await result[7])?.data ?? [], videos: (await result[8])?.data ?? [] })
 
     } catch (err) {
         console.log(err)
@@ -1615,54 +1569,62 @@ const addNoteImage = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const onSearchAllItem = (req, res) => {
-    try {
-        let keyword = req.query.keyword;
-        let sql = `SELECT pk, title, `
-        db.query(`SELECT pk, title, hash FROM oneword_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result1) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "서버 에러 발생", [])
-            } else {
-                await db.query(`SELECT pk, title, hash FROM oneevent_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result2) => {
-                    if (err) {
-                        console.log(err)
-                        return response(req, res, -200, "서버 에러 발생", [])
-                    } else {
-                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM issue_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result3) => {
-                            if (err) {
-                                console.log(err)
-                                return response(req, res, -200, "서버 에러 발생", [])
-                            } else {
-                                await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM feature_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result4) => {
-                                    if (err) {
-                                        console.log(err)
-                                        return response(req, res, -200, "서버 에러 발생", [])
-                                    } else {
-                                        await db.query(`SELECT pk, title, hash, main_img, font_color, background_color, date FROM theme_table WHERE status=1 AND (title LIKE "%${keyword}%" OR hash LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result5) => {
-                                            if (err) {
-                                                console.log(err)
-                                                return response(req, res, -200, "서버 에러 발생", [])
-                                            } else {
-                                                await db.query(`SELECT pk, title, font_color, background_color, link FROM video_table WHERE status=1 AND (title LIKE "%${keyword}%" OR note LIKE "%${keyword}%") ORDER BY sort DESC LIMIT 8`, async (err, result6) => {
-                                                    if (err) {
-                                                        console.log(err)
-                                                        return response(req, res, -200, "서버 에러 발생", [])
-                                                    } else {
-                                                        return response(req, res, 100, "success", { oneWord: result1, oneEvent: result2, issues: result3, features: result4, themes: result5, videos: result6 });
-                                                    }
-                                                })
-                                            }
-                                        })
-                                    }
-                                })
+const processParallel = () => {
 
-                            }
-                        })
-                    }
+}
+const queryPromise = (table, sql) => {
+
+    return new Promise(async (resolve, reject) => {
+        await db.query(sql, (err, result, fields) => {
+            if (err) {
+                console.log(sql)
+                console.log(err)
+                reject({
+                    code: -200,
+                    data: [],
+                    table: table
+                })
+            } else {
+                resolve({
+                    code: 200,
+                    data: result,
+                    table: table
                 })
             }
         })
+    })
+}
+const onSearchAllItem = async (req, res) => {
+    try {
+        let keyword = req.query.keyword;
+
+        let sql_list = [];
+        let sql_obj = [{ table: 'oneword', column: ['pk', 'title', 'hash'], wheres: ['title', 'hash', 'note'] },
+        { table: 'oneevent', column: ['pk', 'title', 'hash'], wheres: ['title', 'hash', 'note'] },
+        { table: 'issue', column: ['pk', 'title', 'hash', 'main_img', 'font_color', 'background_color', 'date'], wheres: ['title', 'hash', 'note'] },
+        { table: 'feature', column: ['pk', 'title', 'hash', 'main_img', 'font_color', 'background_color', 'date'], wheres: ['title', 'hash', 'note'] },
+        { table: 'theme', column: ['pk', 'title', 'hash', 'main_img', 'font_color', 'background_color', 'date'], wheres: ['title', 'hash', 'note'] },
+        { table: 'video', column: ['pk', 'title', 'font_color', 'background_color', 'link'], wheres: ['title', 'note'] },
+        ]
+        for (var i = 0; i < sql_obj.length; i++) {
+            let sql = "";
+            sql = `SELECT ${sql_obj[i].column.join()} FROM ${sql_obj[i].table}_table WHERE status=1 AND (`;
+            for (var j = 0; j < sql_obj[i].wheres.length; j++) {
+                if (j != 0) {
+                    sql += ` OR `
+                }
+                sql += ` ${sql_obj[i].wheres[j]} LIKE "%${keyword}%" `
+            }
+            sql += `) ORDER BY sort DESC LIMIT 8 `;
+
+            sql_list.push(queryPromise(sql_obj[i].table, sql));
+        }
+        for (var i = 0; i < sql_list.length; i++) {
+            await sql_list[i];
+        }
+        let result = (await when(sql_list));
+        return response(req, res, 100, "success", { oneWord: (await result[0])?.data ?? [], oneEvent: (await result[1])?.data ?? [], issues: (await result[2])?.data ?? [], features: (await result[3])?.data ?? [], themes: (await result[4])?.data ?? [], videos: (await result[5])?.data ?? [] });
+
 
     } catch (err) {
         console.log(err)
@@ -1765,6 +1727,30 @@ const getItems = (req, res) => {
                 }
             })
         }
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const getAllSchema = (req, res) => {
+    try {
+        let table_list = ['oneword', 'oneevent', 'strategy'];
+        let sql = "";
+        for (var i = 0; i < table_list.length; i++) {
+            if (i != 0) {
+                sql += ` UNION ALL `;
+            }
+            sql += `SELECT * FROM ${table_list[i]}_table `;
+        }
+        console.log(sql);
+        db.query(sql, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", result)
+            }
+        })
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -2007,7 +1993,7 @@ const setCountNotReadNoti = async (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllSchema,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem, onResign,
