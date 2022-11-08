@@ -1643,10 +1643,11 @@ const getAllPosts = async (req, res) => {
         ]
         for (var i = 0; i < sql_obj.length; i++) {
             let sql = "";
-            sql = `SELECT ${sql_obj[i].table}_table.*, '${sql_obj[i].table}' AS category, (SELECT COUNT(*)  FROM comment_table WHERE comment_table.item_pk=${sql_obj[i].table}_table.pk AND comment_table.category_pk=${sql_obj[i].category_num}) AS comment_num, user_table.nickname FROM ${sql_obj[i].table}_table LEFT JOIN user_table ON ${sql_obj[i].table}_table.user_pk=user_table.pk `;
+            sql = `SELECT ${sql_obj[i].table}_table.title, ${sql_obj[i].table}_table.date, ${sql_obj[i].table}_table.views, '${sql_obj[i].table}' AS category, (SELECT COUNT(*)  FROM comment_table WHERE comment_table.item_pk=${sql_obj[i].table}_table.pk AND comment_table.category_pk=${sql_obj[i].category_num}) AS comment_num, user_table.nickname FROM ${sql_obj[i].table}_table LEFT JOIN user_table ON ${sql_obj[i].table}_table.user_pk=user_table.pk `;
             if(keyword){
                 sql += ` WHERE (${sql_obj[i].table}_table.title LIKE "%${keyword}%" OR user_table.nickname LIKE "%${keyword}%")`;
             }
+            
             sql_list.push(queryPromise(sql_obj[i].table, sql));
         }
         for (var i = 0; i < sql_list.length; i++) {
@@ -1657,9 +1658,18 @@ const getAllPosts = async (req, res) => {
         for(var i =0; i< result_.length;i++){
             result = [...result, ...(await result_[i])?.data ?? []];
         }
-        result = result.sort(function(a, b){
-            return b.date - a.date;
-        })
+      
+        result = await result.sort(function (a, b) {
+            let x = a.date.toLowerCase();
+            let y = b.date.toLowerCase();
+            if (x > y) {
+                return -1;
+            }
+            if (x < y) {
+                return 1;
+            }
+            return 0;
+        });
         let maxPage = makeMaxPage(result.length, page_cut);
         let result_obj = {};
         if(page){
@@ -1677,21 +1687,25 @@ const getAllPosts = async (req, res) => {
 function getDateRangeData(param1, param2){  //param1은 시작일, param2는 종료일이다.
 	var res_day = [];
  	var ss_day = new Date(param1);
-   	var ee_day = new Date(param2);    	
+   	var ee_day = new Date(param2); 
+       var _mon_ = (ss_day.getMonth()+1); 
+       var month =  _mon_ < 10 ? '0'+_mon_ : _mon_;	
   		while(ss_day.getTime() <= ee_day.getTime()){
   			var _mon_ = (ss_day.getMonth()+1);
   			_mon_ = _mon_ < 10 ? '0'+_mon_ : _mon_;
   			var _day_ = ss_day.getDate();
   			_day_ = _day_ < 10 ? '0'+_day_ : _day_;
-   			res_day.push(ss_day.getFullYear() + '-' + _mon_ + '-' +  _day_);
+            let current_flag = ss_day.getFullYear() + '-' + _mon_ + '-' +  _day_ <= returnMoment().substring(0, 10);
+            if(month==_mon_ && current_flag){
+                res_day.push(ss_day.getFullYear() + '-' + _mon_ + '-' +  _day_);
+            }
    			ss_day.setDate(ss_day.getDate() + 1);
    	}
    	return res_day;
 }
 const getUserStatistics = async (req, res) => {
     try {
-        let {page, page_cut, year, type} = req.query;
-        console.log(req.query)
+        let {page, page_cut, year, month, type} = req.query;
         if (!page_cut) {
             page_cut = 15;
         }
@@ -1705,21 +1719,12 @@ const getUserStatistics = async (req, res) => {
                 last_month = 12;
             }
             for(var i=1;i<=last_month;i++){
-                if(year=='2022'){
-                    if(i>=8){
-                        dates.push(`${year}-${i<10?`0${i}`:i}`);
-                    }
-                }else{
-                    dates.push(`${year}-${i<10?`0${i}`:i}`);
-                }
+                dates.push(`${year}-${i<10?`0${i}`:i}`);
             }
             format = '%Y-%m';
         }else{
-            if(year == returnMoment().substring(0,4)){
-                dates = getDateRangeData(new Date(`${year}-${year=='2022'?'08':'01'}-01`),new Date(returnMoment().substring(0,10)));
-            }else{
-                dates = getDateRangeData(new Date(`${year}-${year=='2022'?'08':'01'}-01`),new Date(`${year}-12-31`));
-            }
+            
+            dates = getDateRangeData(new Date(`${year}-${month<10?`0${month}`:`${month}`}-01`),new Date(`${year}-${month<10?`0${month}`:`${month}`}-31`));
             format = '%Y-%m-%d';
         }
         dates = dates.reverse();
@@ -1740,9 +1745,18 @@ const getUserStatistics = async (req, res) => {
             {table:'notice',date_colomn:'post_date',count_column:'post_count'},
             {table:'comment',date_colomn:'comment_date',count_column:'comment_count'},
         ]
+        let subStr = ``;
+        if(type=='day'){
+            subStr = ` WHERE SUBSTR(DATE, 1, 7)='${year+`-${month<10?`0${month}`:month}`}' `;
+        }else if(type=='month'){
+            subStr = ` WHERE SUBSTR(DATE, 1, 4)='${year}' `;
+        }else{
+            return response(req, res, -100, "fail", []) 
+        }
         for (var i = 0; i < sql_obj.length; i++) {
             let sql = "";
-            sql = `SELECT DATE_FORMAT(date, '${format}') AS ${sql_obj[i].date_colomn}, COUNT(DATE_FORMAT(date, '${format}')) AS ${sql_obj[i].count_column} FROM ${sql_obj[i].table}_table WHERE SUBSTR(DATE, 1, 4)=${year} GROUP BY DATE_FORMAT(date, '${format}') ORDER BY ${sql_obj[i].date_colomn} DESC`;
+            
+            sql = `SELECT DATE_FORMAT(date, '${format}') AS ${sql_obj[i].date_colomn}, COUNT(DATE_FORMAT(date, '${format}')) AS ${sql_obj[i].count_column} FROM ${sql_obj[i].table}_table ${subStr} GROUP BY DATE_FORMAT(date, '${format}') ORDER BY ${sql_obj[i].date_colomn} DESC`;
             sql_list.push(queryPromise(sql_obj[i].table, sql));
         }
         for (var i = 0; i < sql_list.length; i++) {
@@ -1782,7 +1796,6 @@ const getUserStatistics = async (req, res) => {
             }
             let data_list = (await result[i])?.data;
             if(data_list.length>0){
-                console.log(data_list)
                 for(var j = 0 ; j< data_list.length ; j++ ){
                     result_list[date_index_obj[data_list[j][date_column]]][count_column] += data_list[j][count_column]
                 }     
