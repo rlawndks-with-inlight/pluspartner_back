@@ -978,7 +978,7 @@ const getVideo = (req, res) => {
             } else {
                 let relate_video = JSON.parse(result[0].relate_video);
                 relate_video = relate_video.join();
-                await db.query(`SELECT title,date,pk FROM video_table WHERE pk IN (${relate_video})`, (err, result2) => {
+                await db.query(`SELECT title, date, pk FROM video_table WHERE pk IN (${relate_video})`, (err, result2) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "서버 에러 발생", [])
@@ -1430,12 +1430,15 @@ const getItem = (req, res) => {
 
 const addVideo = (req, res) => {
     try {
-        const { user_pk, title, link, note, font_color, background_color, relate_video, note_align } = req.body;
+        const { user_pk, title, link, note,want_push, font_color, background_color, relate_video, note_align } = req.body;
         db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color, note_align) VALUES (?, ?, ?, ?, ?, ?, ?)", [user_pk, title, link, note, font_color, background_color, note_align], async (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
+                if (want_push == 1) {
+                    sendAlarm(`${title}`, "", "video", result.insertId, `/post/video/${result.insertId}`);
+                }
                 await db.query("UPDATE video_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
                         console.log(err)
