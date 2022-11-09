@@ -217,7 +217,7 @@ const onLoginById = async (req, res) => {
                                 },
                                     jwtSecret,
                                     {
-                                        expiresIn: '600m',
+                                        expiresIn: '6000m',
                                         issuer: 'fori',
                                     });
                                 res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
@@ -268,7 +268,7 @@ const onLoginBySns = (req, res) => {
                     },
                         jwtSecret,
                         {
-                            expiresIn: '600m',
+                            expiresIn: '6000m',
                             issuer: 'fori',
                         });
                     res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 });
@@ -636,6 +636,7 @@ const getUsers = (req, res) => {
         let page_cut = req.query.page_cut;
         let status = req.query.status;
         let keyword = req.query.keyword;
+        let userType = req.query.userType;
         let whereStr = " WHERE 1=1 ";
         if (req.query.level) {
             if (req.query.level == 0) {
@@ -644,11 +645,14 @@ const getUsers = (req, res) => {
                 whereStr += ` AND user_level=${req.query.level} `;
             }
         }
+        if(userType){
+            whereStr += ` AND type=${userType} `;
+        }
         if (status) {
             whereStr += ` AND status=${status} `;
         }
         if (keyword) {
-            whereStr += ` AND (id LIKE '%${keyword}%' OR name LIKE '%${keyword}%' OR nickname LIKE '%${keyword}%')`;
+            whereStr += ` AND (id LIKE '%${keyword}%' OR name LIKE '%${keyword}%' OR nickname LIKE '%${keyword}%' OR phone LIKE '%${keyword}%')`;
         }
         if (!page_cut) {
             page_cut = 15
