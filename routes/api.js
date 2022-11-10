@@ -120,7 +120,6 @@ const updateAlarm = (req, res) => {
 }
 const onSignUp = async (req, res) => {
     try {
-
         //logRequest(req)
         const id = req.body.id ?? "";
         const pw = req.body.pw ?? "";
@@ -131,9 +130,9 @@ const onSignUp = async (req, res) => {
         const type_num = req.body.type_num ?? 0;
         const profile_img = req.body.profile_img ?? "";
         //중복 체크 
-        let sql = "SELECT * FROM user_table WHERE id=? OR nickname=? OR user_level=? "
+        let sql = "SELECT * FROM user_table WHERE id=? OR nickname=? ";
 
-        db.query(sql, [id, nickname, -10], (err, result) => {
+        db.query(sql, [id, nickname, -10],async (err, result) => {
             if (result.length > 0) {
                 let msg = "";
                 let i = 0;
@@ -151,39 +150,51 @@ const onSignUp = async (req, res) => {
                         break;
                     }
                 }
-                if (i != result.length) {
                     return response(req, res, -200, msg, [])
-                }
+                
             } else {
-                crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
-                    // bcrypt.hash(pw, salt, async (err, hash) => {
-                    let hash = decoded.toString('base64')
-
+                await db.query("SELECT * FROM user_table WHERE user_level=-10",async(err, result)=>{
                     if (err) {
                         console.log(err)
                         response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
-                    }
-
-                    sql = 'INSERT INTO user_table (id, pw, name, nickname , phone, user_level, type, profile_img) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-                    await db.query(sql, [id, hash, name, nickname, phone, user_level, type_num, profile_img], async (err, result) => {
-
-                        if (err) {
-                            console.log(err)
-                            response(req, res, -200, "회원 추가 실패", [])
-                        }
-                        else {
-                            await db.query("UPDATE user_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
+                    }else{
+                        console.log(result.map(item=>item.phone))
+                        if(result.map(item=>item.phone).includes(phone)){
+                            return response(req, res, -100, "가입할 수 없는 전화번호 입니다.", [])
+                        }else{
+                            await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
+                                // bcrypt.hash(pw, salt, async (err, hash) => {
+                                let hash = decoded.toString('base64')
+            
                                 if (err) {
                                     console.log(err)
-                                    response(req, res, -200, "회원 추가 실패", [])
+                                    response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
                                 }
-                                else {
-                                    response(req, res, 200, "회원 추가 성공", [])
-                                }
+            
+                                sql = 'INSERT INTO user_table (id, pw, name, nickname , phone, user_level, type, profile_img) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                                await db.query(sql, [id, hash, name, nickname, phone, user_level, type_num, profile_img], async (err, result) => {
+            
+                                    if (err) {
+                                        console.log(err)
+                                        response(req, res, -200, "회원 추가 실패", [])
+                                    }
+                                    else {
+                                        await db.query("UPDATE user_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
+                                            if (err) {
+                                                console.log(err)
+                                                response(req, res, -200, "회원 추가 실패", [])
+                                            }
+                                            else {
+                                                response(req, res, 200, "회원 추가 성공", [])
+                                            }
+                                        })
+                                    }
+                                })
                             })
                         }
-                    })
+                    }
                 })
+               
             }
         })
 
