@@ -45,6 +45,10 @@ router.get('/', (req, res) => {
 
 const addAlarm = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 40)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         // 바로할지, 0-1, 요일, 시간, 
         const { title, note, url, type, start_date, days, time } = req.body;
 
@@ -748,6 +752,10 @@ const updateUser = async (req, res) => {
 
 const addMaster = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 40)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const id = req.body.id ?? "";
         const pw = req.body.pw ?? "";
         const name = req.body.name ?? "";
@@ -859,6 +867,10 @@ const updateMaster = (req, res) => {
 }
 const addChannel = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 40)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const id = req.body.id ?? "";
         const pw = req.body.pw ?? "";
         const name = req.body.name ?? "";
@@ -1053,6 +1065,7 @@ const getVideoContent = (req, res) => {
 }
 const getComments = (req, res) => {
     try {
+        
         const { pk, category } = req.query;
         let zColumn = [];
         let columns = ""
@@ -1080,6 +1093,10 @@ const getComments = (req, res) => {
 }
 const addComment = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 0)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const { userPk, userNick, pk, parentPk, title, note, category } = req.body;
         db.query("INSERT INTO comment_table (user_pk, user_nickname, item_pk, item_title, note, category_pk, parent_pk) VALUES (?, ?, ?, ?, ?, ?, ?)", [userPk, userNick, pk, title, note, category, parentPk], (err, result) => {
             if (err) {
@@ -1123,6 +1140,10 @@ const getCommentsManager = (req, res) => {
 }
 const addOneWord = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const { title, hash, suggest_title, note, user_pk } = req.body;
         let zColumn = [title, hash, suggest_title, note, user_pk];
         let columns = "(title, hash, suggest_title, note, user_pk";
@@ -1160,6 +1181,10 @@ const addOneWord = (req, res) => {
 }
 const addOneEvent = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const { title, hash, suggest_title, note, user_pk } = req.body;
         let zColumn = [title, hash, suggest_title, note, user_pk];
         let columns = "(title, hash, suggest_title, note, user_pk";
@@ -1213,6 +1238,10 @@ const getKoreaByEng = (str) => {
 }
 const addItem = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const { title, hash, suggest_title, want_push, note, user_pk, table, category, font_color, background_color, note_align } = req.body;
         let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color, note_align];
         let columns = "(title, hash, suggest_title, note, user_pk, font_color, background_color, note_align";
@@ -1299,6 +1328,10 @@ const updateItem = (req, res) => {
 }
 const addIssueCategory = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const { title, sub_title } = req.body;
         let image = "";
         if (req.file) {
@@ -1353,6 +1386,10 @@ const updateIssueCategory = (req, res) => {
 }
 const addFeatureCategory = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const { title, sub_title } = req.body;
         let image = "";
         if (req.file) {
@@ -1451,6 +1488,10 @@ const getItem = (req, res) => {
 
 const addVideo = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const { user_pk, title, link, note,want_push, font_color, background_color, relate_video, note_align } = req.body;
         db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color, note_align) VALUES (?, ?, ?, ?, ?, ?, ?)", [user_pk, title, link, note, font_color, background_color, note_align], async (err, result) => {
             if (err) {
@@ -1535,6 +1576,10 @@ const updateVideo = (req, res) => {
 }
 const addNotice = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const { title, note, note_align, want_push, user_pk } = req.body;
         db.query("INSERT INTO notice_table ( title, note, note_align, user_pk) VALUES (?, ?, ?, ?)", [title, note, note_align, user_pk], async (err, result) => {
             if (err) {
@@ -1581,6 +1626,10 @@ const updateNotice = (req, res) => {
 }
 const addNoteImage = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         if (req.file) {
             return response(req, res, 100, "success", { filename: `/image/note/${req.file.filename}` })
         } else {
@@ -1984,6 +2033,10 @@ const deleteItem = (req, res) => {
 }
 const addSetting = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if(!decode){
+            response(req, res, -200, "권한이 없습니다.", [])
+        }
         const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
         db.query("INSERT INTO setting_table (main_img) VALUES (?)", [image], (err, result) => {
             if (err) {
@@ -2188,5 +2241,5 @@ module.exports = {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
-    deleteItem, onResign,
+    deleteItem, onResign
 };
