@@ -1097,7 +1097,17 @@ const addComment = (req, res) => {
 }
 const updateComment = (req, res) => {
     try {
+        const { pk , note} = req.body;
 
+        db.query("UPDATE comment_table SET note=? WHERE pk=?",[note,pk],(err, result)=>{
+            if (err) {
+                console.log(err)
+                response(req, res, -200, "fail", [])
+            }
+            else {
+                response(req, res, 200, "success", [])
+            }
+        })
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
