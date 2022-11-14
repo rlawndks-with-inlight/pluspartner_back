@@ -50,7 +50,7 @@ const addAlarm = (req, res) => {
             response(req, res, -200, "권한이 없습니다.", [])
         }
         // 바로할지, 0-1, 요일, 시간, 
-        const { title, note, url, type, start_date, days, time } = req.body;
+        let { title, note, url, type, start_date, days, time } = req.body;
 
 
         db.query("INSERT INTO alarm_table (title, note, url, type, start_date, days, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [title, note, url, type, start_date, days, time], async (err, result) => {
@@ -106,7 +106,7 @@ const getNoticeAndAlarmLastPk = (req, res) => {
 const updateAlarm = (req, res) => {
     try {
         // 바로할지, 0-1, 요일, 시간, 
-        const { title, note, url, type, start_date, days, time, pk } = req.body;
+        let { title, note, url, type, start_date, days, time, pk } = req.body;
         db.query("UPDATE alarm_table SET title=?, note=?, url=?, type=?, start_date=?, days=?, time=? WHERE pk=?", [title, note, url, type, start_date, days, time, pk], (err, result) => {
             if (err) {
                 console.log(err)
