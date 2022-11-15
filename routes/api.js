@@ -46,7 +46,7 @@ router.get('/', (req, res) => {
 const addAlarm = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 40)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         // 바로할지, 0-1, 요일, 시간, 
@@ -136,7 +136,7 @@ const onSignUp = async (req, res) => {
         //중복 체크 
         let sql = "SELECT * FROM user_table WHERE id=? OR nickname=? ";
 
-        db.query(sql, [id, nickname, -10],async (err, result) => {
+        db.query(sql, [id, nickname, -10], async (err, result) => {
             if (result.length > 0) {
                 let msg = "";
                 let i = 0;
@@ -154,30 +154,30 @@ const onSignUp = async (req, res) => {
                         break;
                     }
                 }
-                    return response(req, res, -200, msg, [])
-                
+                return response(req, res, -200, msg, [])
+
             } else {
-                await db.query("SELECT * FROM user_table WHERE user_level=-10",async(err, result)=>{
+                await db.query("SELECT * FROM user_table WHERE user_level=-10", async (err, result) => {
                     if (err) {
                         console.log(err)
                         return response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
-                    }else{
-                        console.log(result.map(item=>item.phone))
-                        if(result.map(item=>item.phone).includes(phone)){
+                    } else {
+                        console.log(result.map(item => item.phone))
+                        if (result.map(item => item.phone).includes(phone)) {
                             return response(req, res, -100, "가입할 수 없는 전화번호 입니다.", [])
-                        }else{
+                        } else {
                             await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                                 // bcrypt.hash(pw, salt, async (err, hash) => {
                                 let hash = decoded.toString('base64')
-            
+
                                 if (err) {
                                     console.log(err)
                                     return response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
                                 }
-            
+
                                 sql = 'INSERT INTO user_table (id, pw, name, nickname , phone, user_level, type, profile_img) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
                                 await db.query(sql, [id, hash, name, nickname, phone, user_level, type_num, profile_img], async (err, result) => {
-            
+
                                     if (err) {
                                         console.log(err)
                                         return response(req, res, -200, "회원 추가 실패", [])
@@ -198,7 +198,7 @@ const onSignUp = async (req, res) => {
                         }
                     }
                 })
-               
+
             }
         })
 
@@ -660,7 +660,7 @@ const getUsers = (req, res) => {
                 whereStr += ` AND user_level=${req.query.level} `;
             }
         }
-        if(userType){
+        if (userType) {
             whereStr += ` AND type=${userType} `;
         }
         if (status) {
@@ -753,7 +753,7 @@ const updateUser = async (req, res) => {
 const addMaster = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 40)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const id = req.body.id ?? "";
@@ -768,7 +768,7 @@ const addMaster = (req, res) => {
 
         db.query(sql, [id], (err, result) => {
             if (result.length > 0)
-            return response(req, res, -200, "ID가 중복됩니다.", [])
+                return response(req, res, -200, "ID가 중복됩니다.", [])
             else {
                 crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                     // bcrypt.hash(pw, salt, async (err, hash) => {
@@ -819,7 +819,7 @@ const updateMaster = (req, res) => {
         let sql = "SELECT * FROM user_table WHERE id=? AND pk!=?"
         db.query(sql, [id, pk], async (err, result) => {
             if (result?.length > 0)
-            return response(req, res, -200, "ID가 중복됩니다.", [])
+                return response(req, res, -200, "ID가 중복됩니다.", [])
             else {
                 let columns = " id=?, name=?, nickname=? ";
                 let zColumn = [id, name, nickname];
@@ -868,7 +868,7 @@ const updateMaster = (req, res) => {
 const addChannel = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 40)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const id = req.body.id ?? "";
@@ -881,7 +881,7 @@ const addChannel = (req, res) => {
 
         db.query(sql, [id], (err, result) => {
             if (result.length > 0)
-            return response(req, res, -200, "ID가 중복됩니다.", [])
+                return response(req, res, -200, "ID가 중복됩니다.", [])
             else {
                 crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                     // bcrypt.hash(pw, salt, async (err, hash) => {
@@ -1020,7 +1020,7 @@ const getVideo = (req, res) => {
 const getVideoContent = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 0)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const pk = req.query.pk;
@@ -1069,7 +1069,7 @@ const getVideoContent = (req, res) => {
 }
 const getComments = (req, res) => {
     try {
-        
+
         const { pk, category } = req.query;
         let zColumn = [];
         let columns = ""
@@ -1098,7 +1098,7 @@ const getComments = (req, res) => {
 const addComment = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 0)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { userPk, userNick, pk, parentPk, title, note, category } = req.body;
@@ -1118,9 +1118,9 @@ const addComment = (req, res) => {
 }
 const updateComment = (req, res) => {
     try {
-        const { pk , note} = req.body;
+        const { pk, note } = req.body;
 
-        db.query("UPDATE comment_table SET note=? WHERE pk=?",[note,pk],(err, result)=>{
+        db.query("UPDATE comment_table SET note=? WHERE pk=?", [note, pk], (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "fail", [])
@@ -1145,7 +1145,7 @@ const getCommentsManager = (req, res) => {
 const addOneWord = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, hash, suggest_title, note, user_pk } = req.body;
@@ -1186,7 +1186,7 @@ const addOneWord = (req, res) => {
 const addOneEvent = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, hash, suggest_title, note, user_pk } = req.body;
@@ -1243,7 +1243,7 @@ const getKoreaByEng = (str) => {
 const addItem = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, hash, suggest_title, want_push, note, user_pk, table, category, font_color, background_color, note_align } = req.body;
@@ -1333,7 +1333,7 @@ const updateItem = (req, res) => {
 const addIssueCategory = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, sub_title } = req.body;
@@ -1391,7 +1391,7 @@ const updateIssueCategory = (req, res) => {
 const addFeatureCategory = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, sub_title } = req.body;
@@ -1448,13 +1448,13 @@ const updateFeatureCategory = (req, res) => {
 }
 
 const getItem = (req, res) => {
-    
+
     try {
         let table = req.query.table ?? "user";
         let pk = req.query.pk ?? 0;
         let whereStr = " WHERE pk=? ";
         const decode = checkLevel(req.cookies.token, 0)
-        if(!decode && table!='notice'){
+        if (!decode && table != 'notice') {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         if (table == "setting") {
@@ -1498,10 +1498,10 @@ const getItem = (req, res) => {
 const addVideo = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
-        const { user_pk, title, link, note,want_push, font_color, background_color, relate_video, note_align } = req.body;
+        const { user_pk, title, link, note, want_push, font_color, background_color, relate_video, note_align } = req.body;
         db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color, note_align) VALUES (?, ?, ?, ?, ?, ?, ?)", [user_pk, title, link, note, font_color, background_color, note_align], async (err, result) => {
             if (err) {
                 console.log(err)
@@ -1586,7 +1586,7 @@ const updateVideo = (req, res) => {
 const addNotice = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, note, note_align, want_push, user_pk } = req.body;
@@ -1636,7 +1636,7 @@ const updateNotice = (req, res) => {
 const addNoteImage = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         if (req.file) {
@@ -1720,22 +1720,22 @@ const getAllPosts = async (req, res) => {
         }
         let sql_list = [];
         let sql_obj = [
-            { table: 'oneword', category_num:0 },
-            { table: 'oneevent' , category_num:1},
-            { table: 'theme', category_num:2 },
-            { table: 'strategy', category_num:3 },
-            { table: 'issue', category_num:4 },
-            { table: 'feature', category_num:5 },
-            { table: 'video', category_num:6 },
-            { table: 'notice', category_num:7 },
+            { table: 'oneword', category_num: 0 },
+            { table: 'oneevent', category_num: 1 },
+            { table: 'theme', category_num: 2 },
+            { table: 'strategy', category_num: 3 },
+            { table: 'issue', category_num: 4 },
+            { table: 'feature', category_num: 5 },
+            { table: 'video', category_num: 6 },
+            { table: 'notice', category_num: 7 },
         ]
         for (var i = 0; i < sql_obj.length; i++) {
             let sql = "";
             sql = `SELECT ${sql_obj[i].table}_table.title, ${sql_obj[i].table}_table.date, ${sql_obj[i].table}_table.views, '${sql_obj[i].table}' AS category, (SELECT COUNT(*)  FROM comment_table WHERE comment_table.item_pk=${sql_obj[i].table}_table.pk AND comment_table.category_pk=${sql_obj[i].category_num}) AS comment_num, user_table.nickname FROM ${sql_obj[i].table}_table LEFT JOIN user_table ON ${sql_obj[i].table}_table.user_pk=user_table.pk `;
-            if(keyword){
+            if (keyword) {
                 sql += ` WHERE (${sql_obj[i].table}_table.title LIKE "%${keyword}%" OR user_table.nickname LIKE "%${keyword}%")`;
             }
-            
+
             sql_list.push(queryPromise(sql_obj[i].table, sql));
         }
         for (var i = 0; i < sql_list.length; i++) {
@@ -1743,10 +1743,10 @@ const getAllPosts = async (req, res) => {
         }
         let result_ = (await when(sql_list));
         let result = [];
-        for(var i =0; i< result_.length;i++){
+        for (var i = 0; i < result_.length; i++) {
             result = [...result, ...(await result_[i])?.data ?? []];
         }
-      
+
         result = await result.sort(function (a, b) {
             let x = a.date.toLowerCase();
             let y = b.date.toLowerCase();
@@ -1760,10 +1760,10 @@ const getAllPosts = async (req, res) => {
         });
         let maxPage = makeMaxPage(result.length, page_cut);
         let result_obj = {};
-        if(page){
-            result = result.slice((page-1)*page_cut, (page)*page_cut)
+        if (page) {
+            result = result.slice((page - 1) * page_cut, (page) * page_cut)
             result_obj = { data: result, maxPage: maxPage };
-        }else{
+        } else {
             result_obj = result;
         }
         return response(req, res, 100, "success", result_obj);
@@ -1772,78 +1772,78 @@ const getAllPosts = async (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-function getDateRangeData(param1, param2){  //param1은 시작일, param2는 종료일이다.
-	var res_day = [];
- 	var ss_day = new Date(param1);
-   	var ee_day = new Date(param2); 
-       var _mon_ = (ss_day.getMonth()+1); 
-       var month =  _mon_ < 10 ? '0'+_mon_ : _mon_;	
-  		while(ss_day.getTime() <= ee_day.getTime()){
-  			var _mon_ = (ss_day.getMonth()+1);
-  			_mon_ = _mon_ < 10 ? '0'+_mon_ : _mon_;
-  			var _day_ = ss_day.getDate();
-  			_day_ = _day_ < 10 ? '0'+_day_ : _day_;
-            let current_flag = ss_day.getFullYear() + '-' + _mon_ + '-' +  _day_ <= returnMoment().substring(0, 10);
-            if(month==_mon_ && current_flag){
-                res_day.push(ss_day.getFullYear() + '-' + _mon_ + '-' +  _day_);
-            }
-   			ss_day.setDate(ss_day.getDate() + 1);
-   	}
-   	return res_day;
+function getDateRangeData(param1, param2) {  //param1은 시작일, param2는 종료일이다.
+    var res_day = [];
+    var ss_day = new Date(param1);
+    var ee_day = new Date(param2);
+    var _mon_ = (ss_day.getMonth() + 1);
+    var month = _mon_ < 10 ? '0' + _mon_ : _mon_;
+    while (ss_day.getTime() <= ee_day.getTime()) {
+        var _mon_ = (ss_day.getMonth() + 1);
+        _mon_ = _mon_ < 10 ? '0' + _mon_ : _mon_;
+        var _day_ = ss_day.getDate();
+        _day_ = _day_ < 10 ? '0' + _day_ : _day_;
+        let current_flag = ss_day.getFullYear() + '-' + _mon_ + '-' + _day_ <= returnMoment().substring(0, 10);
+        if (month == _mon_ && current_flag) {
+            res_day.push(ss_day.getFullYear() + '-' + _mon_ + '-' + _day_);
+        }
+        ss_day.setDate(ss_day.getDate() + 1);
+    }
+    return res_day;
 }
 const getUserStatistics = async (req, res) => {
     try {
-        let {page, page_cut, year, month, type} = req.query;
+        let { page, page_cut, year, month, type } = req.query;
         if (!page_cut) {
             page_cut = 15;
         }
         let dates = [];
         let format = '';
-        if(type=='month'){
+        if (type == 'month') {
             let last_month = 0;
-            if(returnMoment().substring(0,4)==year){
-                last_month = parseInt(returnMoment().substring(5,7));
-            }else{
+            if (returnMoment().substring(0, 4) == year) {
+                last_month = parseInt(returnMoment().substring(5, 7));
+            } else {
                 last_month = 12;
             }
-            for(var i=1;i<=last_month;i++){
-                dates.push(`${year}-${i<10?`0${i}`:i}`);
+            for (var i = 1; i <= last_month; i++) {
+                dates.push(`${year}-${i < 10 ? `0${i}` : i}`);
             }
             format = '%Y-%m';
-        }else{
-            
-            dates = getDateRangeData(new Date(`${year}-${month<10?`0${month}`:`${month}`}-01`),new Date(`${year}-${month<10?`0${month}`:`${month}`}-31`));
+        } else {
+
+            dates = getDateRangeData(new Date(`${year}-${month < 10 ? `0${month}` : `${month}`}-01`), new Date(`${year}-${month < 10 ? `0${month}` : `${month}`}-31`));
             format = '%Y-%m-%d';
         }
         dates = dates.reverse();
         let date_index_obj = {};
-        for(var i =0;i<dates.length;i++){
+        for (var i = 0; i < dates.length; i++) {
             date_index_obj[dates[i]] = i;
         }
         let sql_list = [];
         let sql_obj = [
-            {table:'user',date_colomn:'user_date',count_column:'user_count'},
-            {table:'oneword',date_colomn:'post_date',count_column:'post_count'},
-            {table:'oneevent',date_colomn:'post_date',count_column:'post_count'},
-            {table:'theme',date_colomn:'post_date',count_column:'post_count'},
-            {table:'strategy',date_colomn:'post_date',count_column:'post_count'},
-            {table:'issue',date_colomn:'post_date',count_column:'post_count'},
-            {table:'feature',date_colomn:'post_date',count_column:'post_count'},
-            {table:'video',date_colomn:'post_date',count_column:'post_count'},
-            {table:'notice',date_colomn:'post_date',count_column:'post_count'},
-            {table:'comment',date_colomn:'comment_date',count_column:'comment_count'},
+            { table: 'user', date_colomn: 'user_date', count_column: 'user_count' },
+            { table: 'oneword', date_colomn: 'post_date', count_column: 'post_count' },
+            { table: 'oneevent', date_colomn: 'post_date', count_column: 'post_count' },
+            { table: 'theme', date_colomn: 'post_date', count_column: 'post_count' },
+            { table: 'strategy', date_colomn: 'post_date', count_column: 'post_count' },
+            { table: 'issue', date_colomn: 'post_date', count_column: 'post_count' },
+            { table: 'feature', date_colomn: 'post_date', count_column: 'post_count' },
+            { table: 'video', date_colomn: 'post_date', count_column: 'post_count' },
+            { table: 'notice', date_colomn: 'post_date', count_column: 'post_count' },
+            { table: 'comment', date_colomn: 'comment_date', count_column: 'comment_count' },
         ]
         let subStr = ``;
-        if(type=='day'){
-            subStr = ` WHERE SUBSTR(DATE, 1, 7)='${year+`-${month<10?`0${month}`:month}`}' `;
-        }else if(type=='month'){
+        if (type == 'day') {
+            subStr = ` WHERE SUBSTR(DATE, 1, 7)='${year + `-${month < 10 ? `0${month}` : month}`}' `;
+        } else if (type == 'month') {
             subStr = ` WHERE SUBSTR(DATE, 1, 4)='${year}' `;
-        }else{
-            return response(req, res, -100, "fail", []) 
+        } else {
+            return response(req, res, -100, "fail", [])
         }
         for (var i = 0; i < sql_obj.length; i++) {
             let sql = "";
-            
+
             sql = `SELECT DATE_FORMAT(date, '${format}') AS ${sql_obj[i].date_colomn}, COUNT(DATE_FORMAT(date, '${format}')) AS ${sql_obj[i].count_column} FROM ${sql_obj[i].table}_table ${subStr} GROUP BY DATE_FORMAT(date, '${format}') ORDER BY ${sql_obj[i].date_colomn} DESC`;
             sql_list.push(queryPromise(sql_obj[i].table, sql));
         }
@@ -1852,53 +1852,70 @@ const getUserStatistics = async (req, res) => {
         }
         let result = (await when(sql_list));
         let result_list = [];
-        for(var i = 0;i<dates.length;i++){
+        for (var i = 0; i < dates.length; i++) {
             result_list.push({
-                date:dates[i],
-                user_count:0,
-                visit_count:0,
-                post_count:0,
-                comment_count:0,
-                views_count:0
+                date: dates[i],
+                user_count: 0,
+                visit_count: 0,
+                post_count: 0,
+                comment_count: 0,
+                views_count: 0
             })
         }
-        
-        for(var i = 0;i<result.length;i++){
+
+        for (var i = 0; i < result.length; i++) {
             let date_column = ``;
             let count_column = ``;
-            if((await result[i])?.table=='user'){
+            if ((await result[i])?.table == 'user') {
                 date_column = `user_date`;
                 count_column = `user_count`;
-            }else if((await result[i])?.table=='comment'){
+            } else if ((await result[i])?.table == 'comment') {
                 date_column = `comment_date`;
                 count_column = `comment_count`;
-            }else if((await result[i])?.table=='views'){
+            } else if ((await result[i])?.table == 'views') {
                 date_column = `views_date`;
                 count_column = `views_count`;
-            }else if((await result[i])?.table=='visit'){
+            } else if ((await result[i])?.table == 'visit') {
                 date_column = `visit_date`;
                 count_column = `visit_count`;
-            }else{
+            } else {
                 date_column = `post_date`;
                 count_column = `post_count`;
             }
             let data_list = (await result[i])?.data;
-            if(data_list.length>0){
-                for(var j = 0 ; j< data_list.length ; j++ ){
+            if (data_list.length > 0) {
+                for (var j = 0; j < data_list.length; j++) {
                     result_list[date_index_obj[data_list[j][date_column]]][count_column] += data_list[j][count_column]
-                }     
+                }
             }
-           
+
         }
         let maxPage = makeMaxPage(result_list.length, page_cut);
         let result_obj = {};
-        if(page){
-            result_list = result_list.slice((page-1)*page_cut, (page)*page_cut)
+        if (page) {
+            result_list = result_list.slice((page - 1) * page_cut, (page) * page_cut)
             result_obj = { data: result_list, maxPage: maxPage };
-        }else{
+        } else {
             result_obj = result_list;
         }
         return response(req, res, 100, "success", result_obj);
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const itemCount = (req, res) => {
+    try {
+        const { table } = req.query;
+        db.query(`SELECT COUNT(*) AS count FROM ${table}_table`, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                
+                return response(req, res, 100, "success", result[0])
+            }
+        })
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -2043,7 +2060,7 @@ const deleteItem = (req, res) => {
 const addSetting = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
-        if(!decode){
+        if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
@@ -2247,7 +2264,7 @@ const setCountNotReadNoti = async (req, res) => {
 }
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
-    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics,//select
+    getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
     deleteItem, onResign
