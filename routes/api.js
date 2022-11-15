@@ -47,7 +47,7 @@ const addAlarm = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 40)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         // 바로할지, 0-1, 요일, 시간, 
         let { title, note, url, type, start_date, days, time } = req.body;
@@ -754,7 +754,7 @@ const addMaster = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 40)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const id = req.body.id ?? "";
         const pw = req.body.pw ?? "";
@@ -869,7 +869,7 @@ const addChannel = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 40)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const id = req.body.id ?? "";
         const pw = req.body.pw ?? "";
@@ -1019,6 +1019,10 @@ const getVideo = (req, res) => {
 }
 const getVideoContent = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 0)
+        if(!decode){
+            return response(req, res, -150, "권한이 없습니다.", [])
+        }
         const pk = req.query.pk;
         let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;//비디오 정보
         let sql2 = `SELECT video_relate_table.*, video_table.* FROM video_relate_table LEFT JOIN video_table ON video_relate_table.relate_video_pk = video_table.pk WHERE video_relate_table.video_pk=? `//관련영상
@@ -1095,7 +1099,7 @@ const addComment = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 0)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { userPk, userNick, pk, parentPk, title, note, category } = req.body;
         db.query("INSERT INTO comment_table (user_pk, user_nickname, item_pk, item_title, note, category_pk, parent_pk) VALUES (?, ?, ?, ?, ?, ?, ?)", [userPk, userNick, pk, title, note, category, parentPk], (err, result) => {
@@ -1142,7 +1146,7 @@ const addOneWord = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, hash, suggest_title, note, user_pk } = req.body;
         let zColumn = [title, hash, suggest_title, note, user_pk];
@@ -1183,7 +1187,7 @@ const addOneEvent = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, hash, suggest_title, note, user_pk } = req.body;
         let zColumn = [title, hash, suggest_title, note, user_pk];
@@ -1240,7 +1244,7 @@ const addItem = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, hash, suggest_title, want_push, note, user_pk, table, category, font_color, background_color, note_align } = req.body;
         let zColumn = [title, hash, suggest_title, note, user_pk, font_color, background_color, note_align];
@@ -1330,7 +1334,7 @@ const addIssueCategory = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, sub_title } = req.body;
         let image = "";
@@ -1388,7 +1392,7 @@ const addFeatureCategory = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, sub_title } = req.body;
         let image = "";
@@ -1444,10 +1448,15 @@ const updateFeatureCategory = (req, res) => {
 }
 
 const getItem = (req, res) => {
+    
     try {
         let table = req.query.table ?? "user";
         let pk = req.query.pk ?? 0;
         let whereStr = " WHERE pk=? ";
+        const decode = checkLevel(req.cookies.token, 0)
+        if(!decode && table!='notice'){
+            return response(req, res, -150, "권한이 없습니다.", [])
+        }
         if (table == "setting") {
             whereStr = "";
         }
@@ -1490,7 +1499,7 @@ const addVideo = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { user_pk, title, link, note,want_push, font_color, background_color, relate_video, note_align } = req.body;
         db.query("INSERT INTO video_table (user_pk, title, link, note, font_color, background_color, note_align) VALUES (?, ?, ?, ?, ?, ?, ?)", [user_pk, title, link, note, font_color, background_color, note_align], async (err, result) => {
@@ -1578,7 +1587,7 @@ const addNotice = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const { title, note, note_align, want_push, user_pk } = req.body;
         db.query("INSERT INTO notice_table ( title, note, note_align, user_pk) VALUES (?, ?, ?, ?)", [title, note, note_align, user_pk], async (err, result) => {
@@ -1628,7 +1637,7 @@ const addNoteImage = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         if (req.file) {
             return response(req, res, 100, "success", { filename: `/image/note/${req.file.filename}` })
@@ -2035,7 +2044,7 @@ const addSetting = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if(!decode){
-            response(req, res, -200, "권한이 없습니다.", [])
+            return response(req, res, -150, "권한이 없습니다.", [])
         }
         const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
         db.query("INSERT INTO setting_table (main_img) VALUES (?)", [image], (err, result) => {
