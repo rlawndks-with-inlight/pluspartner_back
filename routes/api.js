@@ -1284,6 +1284,8 @@ const addItem = (req, res) => {
             } else {
                 if (want_push == 1) {
                     sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) +title, note, table, result.insertId, `/post/${table}/${result.insertId}`])
+                
                 }
                 await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
@@ -1513,7 +1515,9 @@ const addVideo = (req, res) => {
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
                 if (want_push == 1) {
-                    sendAlarm(`${title}`, "", "video", result.insertId, `/post/video/${result.insertId}`);
+                    sendAlarm(`${title}`, "", "video", result.insertId, `/video/${result.insertId}`);
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("video") +title, "", "video", result.insertId, `/video/${result.insertId}`])
+                
                 }
                 await db.query("UPDATE video_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
@@ -1602,6 +1606,8 @@ const addNotice = (req, res) => {
             } else {
                 if (want_push == 1) {
                     sendAlarm(`${title}`, "", "notice", result.insertId, `/post/notice/${result.insertId}`);
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("notice") +title, "", "notice", result.insertId, `/post/notice/${result.insertId}`])
+                
                 }
                 //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, "", "notice", result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
