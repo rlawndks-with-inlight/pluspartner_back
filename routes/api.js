@@ -1097,11 +1097,17 @@ const getComments = (req, res) => {
 }
 const addComment = (req, res) => {
     try {
-        const decode = checkLevel(req.cookies.token, 0)
+        const decode = checkLevel(req.cookies.token, 0);
+        let auth = {};
         if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
+        }else{
+            auth = decode;
+
         }
-        const { userPk, userNick, pk, parentPk, title, note, category } = req.body;
+        let { pk, parentPk, title, note, category } = req.body;
+        let userPk = auth.pk;
+        let userNick = auth.nickname;
         db.query("INSERT INTO comment_table (user_pk, user_nickname, item_pk, item_title, note, category_pk, parent_pk) VALUES (?, ?, ?, ?, ?, ?, ?)", [userPk, userNick, pk, title, note, category, parentPk], (err, result) => {
             if (err) {
                 console.log(err)
@@ -1471,8 +1477,7 @@ const getItem = (req, res) => {
                 if (err) {
                     console.log(err)
                     return response(req, res, -200, "서버 에러 발생", [])
-                } else {
-                }
+                } 
             })
         }
         db.query(sql, [pk], (err, result) => {
