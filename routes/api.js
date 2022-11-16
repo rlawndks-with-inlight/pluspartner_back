@@ -1458,6 +1458,7 @@ const updateFeatureCategory = (req, res) => {
 const getItem = (req, res) => {
 
     try {
+        console.log(1)
         let table = req.query.table ?? "user";
         let pk = req.query.pk ?? 0;
         let whereStr = " WHERE pk=? ";
