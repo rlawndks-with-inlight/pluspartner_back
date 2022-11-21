@@ -652,6 +652,7 @@ const getUsers = (req, res) => {
         let status = req.query.status;
         let keyword = req.query.keyword;
         let userType = req.query.userType;
+        let userLevel = req.query.userLevel;
         let whereStr = " WHERE 1=1 ";
         if (req.query.level) {
             if (req.query.level == 0) {
@@ -662,6 +663,9 @@ const getUsers = (req, res) => {
         }
         if (userType) {
             whereStr += ` AND type=${userType} `;
+        }
+        if (userLevel) {
+            whereStr += ` AND user_level=${userLevel} `;
         }
         if (status) {
             whereStr += ` AND status=${status} `;
@@ -1023,6 +1027,7 @@ const getVideoContent = (req, res) => {
         if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
+        
         const pk = req.query.pk;
         let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;//비디오 정보
         let sql2 = `SELECT video_relate_table.*, video_table.* FROM video_relate_table LEFT JOIN video_table ON video_relate_table.relate_video_pk = video_table.pk WHERE video_relate_table.video_pk=? `//관련영상
@@ -1458,7 +1463,7 @@ const updateFeatureCategory = (req, res) => {
 const getItem = (req, res) => {
 
     try {
-        console.log(1)
+       
         let table = req.query.table ?? "user";
         let pk = req.query.pk ?? 0;
         let whereStr = " WHERE pk=? ";
