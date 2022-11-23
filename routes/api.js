@@ -235,7 +235,7 @@ const onLoginById = async (req, res) => {
                                         expiresIn: '60000m',
                                         issuer: 'fori',
                                     });
-                                res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 * 10 });
+                                res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 * 10 * 10 });
                                 db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result1[0].pk], (err, result) => {
                                     if (err) {
                                         console.log(err)
@@ -286,7 +286,7 @@ const onLoginBySns = (req, res) => {
                             expiresIn: '6000m',
                             issuer: 'fori',
                         });
-                    res.cookie("token", token, { httpOnly: true, maxAge:60 * 60 * 1000 * 10 * 10 });
+                    res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 * 10 * 10 * 10 });
                     await db.query('UPDATE user_table SET last_login=? WHERE pk=?', [returnMoment(), result[0].pk], (err, result) => {
                         if (err) {
                             console.log(err)
@@ -1027,7 +1027,7 @@ const getVideoContent = (req, res) => {
         if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
-        
+
         const pk = req.query.pk;
         let sql1 = `SELECT video_table.* , user_table.nickname, user_table.name FROM video_table LEFT JOIN user_table ON video_table.user_pk = user_table.pk WHERE video_table.pk=? LIMIT 1`;//비디오 정보
         let sql2 = `SELECT video_relate_table.*, video_table.* FROM video_relate_table LEFT JOIN video_table ON video_relate_table.relate_video_pk = video_table.pk WHERE video_relate_table.video_pk=? `//관련영상
@@ -1106,7 +1106,7 @@ const addComment = (req, res) => {
         let auth = {};
         if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
-        }else{
+        } else {
             auth = decode;
 
         }
@@ -1289,8 +1289,8 @@ const addItem = (req, res) => {
             } else {
                 if (want_push == 1) {
                     sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) +title, note, table, result.insertId, `/post/${table}/${result.insertId}`])
-                
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) + title, note, table, result.insertId, `/post/${table}/${result.insertId}`])
+
                 }
                 await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
@@ -1463,7 +1463,7 @@ const updateFeatureCategory = (req, res) => {
 const getItem = (req, res) => {
 
     try {
-       
+
         let table = req.query.table ?? "user";
         let pk = req.query.pk ?? 0;
         let whereStr = " WHERE pk=? ";
@@ -1485,7 +1485,7 @@ const getItem = (req, res) => {
                 if (err) {
                     console.log(err)
                     return response(req, res, -200, "서버 에러 발생", [])
-                } 
+                }
             })
         }
         db.query(sql, [pk], (err, result) => {
@@ -1522,8 +1522,8 @@ const addVideo = (req, res) => {
             } else {
                 if (want_push == 1) {
                     sendAlarm(`${title}`, "", "video", result.insertId, `/video/${result.insertId}`);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("video") +title, "", "video", result.insertId, `/video/${result.insertId}`])
-                
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("video") + title, "", "video", result.insertId, `/video/${result.insertId}`])
+
                 }
                 await db.query("UPDATE video_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
                     if (err) {
@@ -1612,8 +1612,8 @@ const addNotice = (req, res) => {
             } else {
                 if (want_push == 1) {
                     sendAlarm(`${title}`, "", "notice", result.insertId, `/post/notice/${result.insertId}`);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("notice") +title, "", "notice", result.insertId, `/post/notice/${result.insertId}`])
-                
+                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("notice") + title, "", "notice", result.insertId, `/post/notice/${result.insertId}`])
+
                 }
                 //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, "", "notice", result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
@@ -1929,7 +1929,7 @@ const itemCount = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-                
+
                 return response(req, res, 100, "success", result[0])
             }
         })
