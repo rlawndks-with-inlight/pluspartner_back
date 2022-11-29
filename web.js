@@ -11,6 +11,8 @@ const port = 8001;
 app.use(cors());
 const http = require('http')
 require('dotenv').config()
+const im = require('imagemagick');
+const sharp = require('sharp')
 //passport, jwt
 const jwt = require('jsonwebtoken')
 const { checkLevel, logRequestResponse, isNotNullOrUndefined, namingImagesPath, nullResponse, lowLevelResponse, response, returnMoment, sendAlarm } = require('./util')
@@ -109,7 +111,32 @@ if (is_test) {
         });
 
 }
+const resizeFile = async (path, filename) => {
+        let filetype = filename.split('.')[1];
+        await fs.rename(path + '/' + filename, path + '/!@#' + filename, function (err) {
+                if (err) throw err;
+        });
+        await sharp(path + '/!@#' + filename)
+                .resize(64, 64)
+                .toFile(path + '/' + filename)
+        fs.unlink(path + '/!@#' + filename, (err) => {  // 원본파일 삭제 
+                if (err) {
+                        console.log(err)
+                        return
+                }
+        })
 
+}
+fs.readdir('./image/profile', async (err, filelist) => {
+        if (err) {
+                console.log(err);
+        } else {
+                for (var i = 0; i < filelist.length; i++) {
+                        let filetype = filelist[i].split('.')[1]
+                        resizeFile('./image/profile', filelist[i]);
+                }
+        }
+});
 
 // Default route for server status
 app.get('/', (req, res) => {
