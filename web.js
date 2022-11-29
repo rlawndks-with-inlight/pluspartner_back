@@ -73,7 +73,7 @@ const scheduleAlarm = () => {
                 console.log(returnMoment());
                 let date = returnMoment().substring(0, 10);
                 let dayOfWeek = new Date(date).getDay()
-                let result = await dbQueryList(`SELECT * FROM alarm_table WHERE DATEDIFF(?, start_date) >= 0 AND days LIKE '%${dayOfWeek}%' AND status=1 AND type=1 `, [date]);
+                let result = await dbQueryList(`SELECT * FROM alarm_table WHERE DATEDIFF(?, start_date) >= 0 AND ( ( days LIKE '%${dayOfWeek}%' AND type=1) OR type=2 ) AND status=1 `, [date]);
                 if (result.code > 0) {
                         let list = [...result.result];
                         for (var i = 0; i < list.length; i++) {

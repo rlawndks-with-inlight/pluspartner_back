@@ -1860,7 +1860,7 @@ const getUserStatistics = async (req, res) => {
         }
         for (var i = 0; i < sql_obj.length; i++) {
             let sql = "";
-
+            
             sql = `SELECT DATE_FORMAT(date, '${format}') AS ${sql_obj[i].date_colomn}, COUNT(DATE_FORMAT(date, '${format}')) AS ${sql_obj[i].count_column} FROM ${sql_obj[i].table}_table ${subStr} GROUP BY DATE_FORMAT(date, '${format}') ORDER BY ${sql_obj[i].date_colomn} DESC`;
             sql_list.push(queryPromise(sql_obj[i].table, sql));
         }
@@ -1918,7 +1918,7 @@ const getUserStatistics = async (req, res) => {
         return response(req, res, 100, "success", result_obj);
     } catch (err) {
         console.log(err)
-        return response(req, res, -200, "서버 에러 발생", [])
+        return response(req, res, -200, "서버 에러 발생", []);
     }
 }
 const itemCount = (req, res) => {
