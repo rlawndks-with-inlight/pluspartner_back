@@ -115,6 +115,7 @@ const resizeFile = async (path, filename) => {
         try {
                 await sharp(path + '/' + filename)
                         .resize(64, 64)
+                        .jpeg({quality:100})
                         .toFile(path + '/' + filename.substring(3, filename.length))
                        await fs.unlink(path + '/' + filename, (err) => {  // 원본파일 삭제 
                                 if (err) {
@@ -131,7 +132,7 @@ fs.readdir('./image/profile', async (err, filelist) => {
                 console.log(err);
         } else {
                 for (var i = 0; i < filelist.length; i++) {
-                        if (filelist[i].includes('!@#')) {
+                        if (filelist[i].includes('!@#') && filelist[i].includes('jpeg')) {
                                 await resizeFile('./image/profile', filelist[i]);
                         }
                 }
