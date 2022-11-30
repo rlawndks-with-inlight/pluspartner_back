@@ -113,16 +113,20 @@ if (is_test) {
 }
 const resizeFile = async (path, filename) => {
         try {
-                await sharp(path + '/' + filename)
-                        .resize(64, 64)
-                        .jpeg({quality:100})
-                        .toFile(path + '/' + filename.substring(3, filename.length))
-                       await fs.unlink(path + '/' + filename, (err) => {  // 원본파일 삭제 
-                                if (err) {
-                                    console.log(err)
-                                    return
-                                }
-                            })
+                // await sharp(path + '/' + filename)
+                //         .resize(64, 64)
+                //         .jpeg({quality:100})
+                //         .toFile(path + '/' + filename.substring(3, filename.length))
+                //        await fs.unlink(path + '/' + filename, (err) => {  // 원본파일 삭제 
+                //                 if (err) {
+                //                     console.log(err)
+                //                     return
+                //                 }
+                //             })
+                fs.rename(path + '/' + filename, path + '/' + filename.replaceAll('!@#',''), function(err){
+                        if( err ) throw err;
+                        console.log('File Renamed!');
+                    });
         } catch (err) {
                 console.log(err)
         }
@@ -132,7 +136,7 @@ fs.readdir('./image/profile', async (err, filelist) => {
                 console.log(err);
         } else {
                 for (var i = 0; i < filelist.length; i++) {
-                        if (filelist[i].includes('!@#') && filelist[i].includes('jpeg')) {
+                        if (filelist[i].includes('!@#')) {
                                 await resizeFile('./image/profile', filelist[i]);
                         }
                 }
