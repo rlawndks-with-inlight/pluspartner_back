@@ -111,11 +111,11 @@ const nullRequestParamsOrBody = {
     code: 400,
     message: "입력이 잘못되었습니다.(요청 데이터 확인)"
 }
-const makeMaxPage = (num, page_cut) =>{
-    if(num%page_cut==0){
-        return num/page_cut;
-    }else{
-        return parseInt(num/page_cut) + 1;
+const makeMaxPage = (num, page_cut) => {
+    if (num % page_cut == 0) {
+        return num / page_cut;
+    } else {
+        return parseInt(num / page_cut) + 1;
     }
 }
 const logRequestResponse = (req, res) => {
@@ -161,6 +161,11 @@ const logRequestResponse = (req, res) => {
         }
     )
 
+}
+const tooMuchRequest = (num) => {
+    if (num > 1000) {
+        return true;
+    }
 }
 const logRequest = (req) => {
     const requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip
@@ -297,5 +302,5 @@ module.exports = {
     logRequestResponse, logResponse, logRequest,
     getUserPKArrStrWithNewPK, isNotNullOrUndefined,
     namingImagesPath, getSQLnParams,
-    nullResponse, lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber, sendAlarm, makeMaxPage
+    nullResponse, lowLevelResponse, response, removeItems, returnMoment, formatPhoneNumber, categoryToNumber, sendAlarm, makeMaxPage, tooMuchRequest
 }

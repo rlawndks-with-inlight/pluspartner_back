@@ -1460,10 +1460,8 @@ const updateFeatureCategory = (req, res) => {
     }
 }
 
-const getItem = (req, res) => {
-
+const getItem = async (req, res) => {
     try {
-
         let table = req.query.table ?? "user";
         let pk = req.query.pk ?? 0;
         let whereStr = " WHERE pk=? ";
@@ -1491,7 +1489,7 @@ const getItem = (req, res) => {
         db.query(sql, [pk], (err, result) => {
             if (err) {
                 console.log(err)
-                return response(req, res, -200, "서버 에러 발생", [])
+                return response(req, res, -200, "서버 에러 발생s", [])
             } else {
                 if (categoryToNumber(table) != -1) {
                     return response(req, res, 100, "success", result[0])
@@ -1860,7 +1858,7 @@ const getUserStatistics = async (req, res) => {
         }
         for (var i = 0; i < sql_obj.length; i++) {
             let sql = "";
-            
+
             sql = `SELECT DATE_FORMAT(date, '${format}') AS ${sql_obj[i].date_colomn}, COUNT(DATE_FORMAT(date, '${format}')) AS ${sql_obj[i].count_column} FROM ${sql_obj[i].table}_table ${subStr} GROUP BY DATE_FORMAT(date, '${format}') ORDER BY ${sql_obj[i].date_colomn} DESC`;
             sql_list.push(queryPromise(sql_obj[i].table, sql));
         }
