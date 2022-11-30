@@ -131,17 +131,17 @@ const resizeFile = async (path, filename) => {
                 console.log(err)
         }
 }
-fs.readdir('./image/profile', async (err, filelist) => {
-        if (err) {
-                console.log(err);
-        } else {
-                for (var i = 0; i < filelist.length; i++) {
-                        if (filelist[i].includes('!@#')) {
-                                await resizeFile('./image/profile', filelist[i]);
-                        }
-                }
-        }
-});
+// fs.readdir('./image/profile', async (err, filelist) => {
+//         if (err) {
+//                 console.log(err);
+//         } else {
+//                 for (var i = 0; i < filelist.length; i++) {
+//                         if (filelist[i].includes('!@#')) {
+//                                 await resizeFile('./image/profile', filelist[i]);
+//                         }
+//                 }
+//         }
+// });
 
 // Default route for server status
 app.get('/', (req, res) => {
