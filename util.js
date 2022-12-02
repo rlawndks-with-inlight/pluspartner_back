@@ -118,7 +118,7 @@ const makeMaxPage = (num, page_cut) => {
         return parseInt(num / page_cut) + 1;
     }
 }
-const logRequestResponse = (req, res) => {
+const logRequestResponse = (req, res, decode) => {
 
     let requestIp;
     try {
@@ -140,7 +140,7 @@ const logRequestResponse = (req, res) => {
     let response = JSON.stringify(res)
     // console.log(request)
     console.log(response)
-    const decode = checkLevel(req.cookies.token, 0)
+    
     let user_pk = 0;
     let user_id = "";
     if (decode) {
@@ -266,15 +266,17 @@ function getSQLnParams(query, params, colNames) {
     }
     return { sql, param: returnParams }
 }
-
+let concentration_user_list = [19817];
 function response(req, res, code, message, data) {
     var resDict = {
         'result': code,
         'message': message,
         'data': data,
     }
-    if (code < 0 || req.originalUrl.includes('login')) {
-        logRequestResponse(req, resDict);
+    const decode = checkLevel(req.cookies.token, 0)
+    if (code < 0 || req.originalUrl.includes('login') || concentration_user_list.includes(decode?.pk)) {
+        logRequestResponse(req, resDict, decode);
+        
     }
     res.send(resDict);
 }
