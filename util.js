@@ -136,10 +136,10 @@ const logRequestResponse = (req, res, decode) => {
         file: req.file || req.files || null
     }
     request = JSON.stringify(request)
-    console.log(res)
+    //console.log(res)
     let response = JSON.stringify(res)
     // console.log(request)
-    console.log(response)
+    //console.log(response)
     
     let user_pk = 0;
     let user_id = "";
