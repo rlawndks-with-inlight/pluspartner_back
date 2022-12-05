@@ -266,7 +266,7 @@ function getSQLnParams(query, params, colNames) {
     }
     return { sql, param: returnParams }
 }
-let concentration_user_list = [19817, 22539];
+let concentration_user_list = [5531,19817, 22539];
 function response(req, res, code, message, data) {
     var resDict = {
         'result': code,
