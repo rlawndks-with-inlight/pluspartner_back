@@ -137,7 +137,6 @@ const logRequestResponse = (req, res, decode) => {
     }
     request = JSON.stringify(request)
     let res_ = res;
-    res_['data'] = { type: typeof res_['data'], length: (typeof res_['data'] == 'object' ? Object.keys(res_['data'])?.length : 0) };
     let response = JSON.stringify(res_)
     let user_pk = 0;
     let user_id = "";
