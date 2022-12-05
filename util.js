@@ -136,11 +136,9 @@ const logRequestResponse = (req, res, decode) => {
         file: req.file || req.files || null
     }
     request = JSON.stringify(request)
-    //console.log(res)
-    let response = JSON.stringify(res)
-    // console.log(request)
-    //console.log(response)
-    
+    let res_ = res;
+    res_['data'] = { type: typeof res_['data'], length: (typeof res_['data'] == 'object' ? Object.keys(res_['data'])?.length : 0) };
+    let response = JSON.stringify(res_)
     let user_pk = 0;
     let user_id = "";
     if (decode) {
@@ -150,8 +148,8 @@ const logRequestResponse = (req, res, decode) => {
         user_pk = -1;
     }
     db.query(
-        "INSERT INTO log_table (request, response, response_result, response_message, request_ip, user_id, user_pk) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [request, response, res?.result, res?.message, requestIp, user_id, user_pk],
+        "INSERT INTO log_table (request, response_result, response_message, request_ip, user_id, user_pk) VALUES (?, ?, ?, ?, ?, ?)",
+        [request, res?.result, res?.message, requestIp, user_id, user_pk],
         (err, result, fields) => {
             if (err)
                 console.log(err)
@@ -266,7 +264,7 @@ function getSQLnParams(query, params, colNames) {
     }
     return { sql, param: returnParams }
 }
-let concentration_user_list = [5531,5191,19817, 22539];
+let concentration_user_list = [5531, 5191, 19817, 22539];
 function response(req, res, code, message, data) {
     var resDict = {
         'result': code,
@@ -276,7 +274,7 @@ function response(req, res, code, message, data) {
     const decode = checkLevel(req.cookies.token, 0)
     if (code < 0 || req.originalUrl.includes('login') || concentration_user_list.includes(decode?.pk)) {
         logRequestResponse(req, resDict, decode);
-        
+
     }
     res.send(resDict);
 }
