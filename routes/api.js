@@ -219,6 +219,8 @@ const onLoginById = async (req, res) => {
                     await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                         // bcrypt.hash(pw, salt, async (err, hash) => {
                         let hash = decoded.toString('base64');
+                        console.log(hash)
+                        console.log(result1[0].pw)
                         if (hash == result1[0].pw) {
                             try {
                                 const token = jwt.sign({
@@ -1104,7 +1106,7 @@ const addComment = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 0);
         let auth = {};
-        if (!decode) {
+        if (!decode || decode?.user_level==-10) {
             return response(req, res, -150, "권한이 없습니다.", [])
         } else {
             auth = decode;
@@ -1462,11 +1464,12 @@ const updateFeatureCategory = (req, res) => {
 
 const getItem = async (req, res) => {
     try {
+        console.log(req.query)
         let table = req.query.table ?? "user";
         let pk = req.query.pk ?? 0;
         let whereStr = " WHERE pk=? ";
         const decode = checkLevel(req.cookies.token, 0)
-        if (!decode && table != 'notice') {
+        if ((!decode || decode?.user_level==-10) && table != 'notice') {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         if (table == "setting") {

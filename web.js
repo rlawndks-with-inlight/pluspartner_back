@@ -161,14 +161,16 @@ const resizeFile = async (path, filename) => {
 
 app.get('/api/item', async (req, res) => {
         try {
+                console.log(req.query)
                 if (tooMuchRequest(app.connectionsN)) {
                         return response(req, res, -120, "접속자 수가 너무많아 지연되고있습니다.(잠시후 다시 시도 부탁드립니다.)", [])
                 }
                 let table = req.query.table ?? "user";
+                console.log(table)
                 let pk = req.query.pk ?? 0;
                 let whereStr = " WHERE pk=? ";
                 const decode = checkLevel(req.cookies.token, 0)
-                if (!decode && table != 'notice') {
+                if ((!decode ||decode?.user_level==-10) && table !== 'notice') {
                         return response(req, res, -150, "권한이 없습니다.", [])
                 }
                 if (table == "setting") {
@@ -264,5 +266,5 @@ app.get('/api/getvideocontent', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-        res.json({ message: `Server is running on port ${req.secure ? HTTPS_PORT : HTTP_PORT}` });
+        res.json({ message: `daogo Server is running on port ${req.secure ? HTTPS_PORT : HTTP_PORT}` });
 });
