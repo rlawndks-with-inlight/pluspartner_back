@@ -79,7 +79,7 @@ const scheduleAlarm = () => {
                 console.log(returnMoment());
                 let date = returnMoment().substring(0, 10);
                 let dayOfWeek = new Date(date).getDay()
-                let result = await dbQueryList(`SELECT * FROM alarm_table WHERE ((DATEDIFF(?, start_date) >= 0 AND days LIKE '%${dayOfWeek}%' AND type=1) OR ( start_date=? AND type=2 )) AND STATUS=1`, [date,date]);
+                let result = await dbQueryList(`SELECT * FROM alarm_table WHERE ((DATEDIFF(?, start_date) >= 0 AND days LIKE '%${dayOfWeek}%' AND type=1) OR ( start_date=? AND type=2 )) AND STATUS=1`, [date, date]);
                 if (result.code > 0) {
                         let list = [...result.result];
                         for (var i = 0; i < list.length; i++) {
@@ -161,16 +161,16 @@ const resizeFile = async (path, filename) => {
 
 app.get('/api/item', async (req, res) => {
         try {
-                // console.log(req.query)
+                console.log(app.connectionsN)
                 // if (tooMuchRequest(app.connectionsN)) {
-                //         return response(req, res, -120, "접속자 수가 너무많아 지연되고있습니다.(잠시후 다시 시도 부탁드립니다.)", [])
-                // }
+                //          return response(req, res, -120, "접속자 수가 너무많아 지연되고있습니다.(잠시후 다시 시도 부탁드립니다.)", [])
+                //  }
                 let table = req.query.table ?? "user";
-                console.log(table)
+                //console.log(table)
                 let pk = req.query.pk ?? 0;
                 let whereStr = " WHERE pk=? ";
                 const decode = checkLevel(req.cookies.token, 0)
-                if ((!decode || decode?.user_level==-10) && table !== 'notice') {
+                if ((!decode || decode?.user_level == -10) && table !== 'notice') {
                         return response(req, res, -150, "권한이 없습니다.", [])
                 }
                 if (table == "setting") {
@@ -212,9 +212,10 @@ app.get('/api/item', async (req, res) => {
 
 app.get('/api/getvideocontent', (req, res) => {
         try {
-                // if (tooMuchRequest(app.connectionsN)) {
-                //         return response(req, res, -120, "접속자 수가 너무많아 지연되고있습니다.(잠시후 다시 시도 부탁드립니다.)", [])
-                // }
+                console.log(app.connectionsN)
+                //  if (tooMuchRequest(app.connectionsN)) {
+                //          return response(req, res, -120, "접속자 수가 너무많아 지연되고있습니다.(잠시후 다시 시도 부탁드립니다.)", [])
+                //  }
                 const decode = checkLevel(req.cookies.token, 0)
                 if (!decode) {
                         return response(req, res, -150, "권한이 없습니다.", [])
