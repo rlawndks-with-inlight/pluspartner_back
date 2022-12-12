@@ -2102,16 +2102,13 @@ const updateSetting = (req, res) => {
         if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
-        const pk = req.body.pk;
-        console.log(req.files)
+        const {pk, file2_link} = req.body;
         let image1 = "";
         let image2 = "";
         let sql = ""
         let values = [];
-        if(!req.files?.content && !req.files?.content2){
-            return response(req, res, 100, "success", [])
-        }else{
-            sql = "UPDATE setting_table SET "
+            sql = "UPDATE setting_table SET file2_link=?,";
+            values.push(file2_link);
             if(req.files?.content){
                 image1 = '/image/' + req?.files?.content[0]?.fieldname + '/' + req?.files?.content[0]?.filename;
                 sql += " main_img=?,";
@@ -2133,7 +2130,7 @@ const updateSetting = (req, res) => {
                     return response(req, res, 100, "success", [])
                 }
             })
-        }
+        
     }
     catch (err) {
         console.log(err)
