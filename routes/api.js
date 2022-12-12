@@ -2098,16 +2098,42 @@ const addSetting = (req, res) => {
 }
 const updateSetting = (req, res) => {
     try {
+        const decode = checkLevel(req.cookies.token, 40)
+        if (!decode) {
+            return response(req, res, -150, "권한이 없습니다.", [])
+        }
         const pk = req.body.pk;
-        const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
-        db.query("UPDATE setting_table SET main_img=? WHERE pk=?", [image, pk], (err, result) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "서버 에러 발생", [])
-            } else {
-                return response(req, res, 100, "success", [])
+        console.log(req.files)
+        let image1 = "";
+        let image2 = "";
+        let sql = ""
+        let values = [];
+        if(!req.files?.content && !req.files?.content2){
+            return response(req, res, 100, "success", [])
+        }else{
+            sql = "UPDATE setting_table SET "
+            if(req.files?.content){
+                image1 = '/image/' + req?.files?.content[0]?.fieldname + '/' + req?.files?.content[0]?.filename;
+                sql += " main_img=?,";
+                values.push(image1);
             }
-        })
+            if(req.files?.content2){
+                image2 = '/image/' + req?.files?.content2[0]?.fieldname + '/' + req?.files?.content2[0]?.filename;
+                sql += " banner_2_img=?,"; 
+                values.push(image2);
+            }
+            sql = sql.substring(0,sql.length-1);
+            sql += " WHERE pk=? ";
+            values.push(pk);
+            db.query(sql, values, (err, result) => {
+                if (err) {
+                    console.log(err)
+                    return response(req, res, -200, "서버 에러 발생", [])
+                } else {
+                    return response(req, res, 100, "success", [])
+                }
+            })
+        }
     }
     catch (err) {
         console.log(err)

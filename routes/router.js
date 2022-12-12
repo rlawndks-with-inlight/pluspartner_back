@@ -55,7 +55,7 @@ router.get('/getallposts', getAllPosts);
 router.get('/getuserstatistics', getUserStatistics);
 router.get('/itemcount', itemCount);
 router.get('/gethomecontent', getHomeContent);
-router.post('/updatesetting', upload.single('master'), updateSetting);
+router.post('/updatesetting', upload.fields([{ name: 'content' }, { name: 'content2' }]), updateSetting);
 router.post('/addsetting', upload.single('master'), addSetting);
 router.get('/setting', getSetting);
 router.post('/updatestatus', updateStatus);
