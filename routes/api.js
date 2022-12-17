@@ -1106,7 +1106,7 @@ const addComment = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 0);
         let auth = {};
-        if (!decode || decode?.user_level==-10) {
+        if (!decode || decode?.user_level == -10) {
             return response(req, res, -150, "권한이 없습니다.", [])
         } else {
             auth = decode;
@@ -1461,15 +1461,70 @@ const updateFeatureCategory = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-
+const addPopup = (req, res) => {
+    try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if (!decode) {
+            return response(req, res, -150, "권한이 없습니다.", [])
+        }
+        const { link } = req.body;
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        }
+        db.query("INSERT INTO popup_table (link,img_src) VALUES (?,?)", [link, image], async (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                await db.query("UPDATE popup_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
+                    if (err) {
+                        console.log(err)
+                        return response(req, res, -200, "fail", [])
+                    }
+                    else {
+                        return response(req, res, 200, "success", [])
+                    }
+                })
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updatePopup = (req, res) => {
+    try {
+        const { link,  pk } = req.body;
+        let zColumn = [link];
+        let columns = " link=?";
+        let image = "";
+        if (req.file) {
+            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            zColumn.push(image);
+            columns += ', main_img=? '
+        }
+        zColumn.push(pk)
+        db.query(`UPDATE popup_table SET ${columns} WHERE pk=?`, zColumn, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const getItem = async (req, res) => {
     try {
-        console.log(req.query)
         let table = req.query.table ?? "user";
         let pk = req.query.pk ?? 0;
         let whereStr = " WHERE pk=? ";
         const decode = checkLevel(req.cookies.token, 0)
-        if ((!decode || decode?.user_level==-10) && table != 'notice') {
+        if ((!decode || decode?.user_level == -10) && table != 'notice') {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
         if (table == "setting") {
@@ -1477,8 +1532,7 @@ const getItem = async (req, res) => {
         }
 
         let sql = `SELECT * FROM ${table}_table ` + whereStr;
-
-        if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm") {
+        if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm"&& table != "popup") {
             sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
         }
         if (req.query.views) {
@@ -2102,35 +2156,36 @@ const updateSetting = (req, res) => {
         if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
-        const {pk, file2_link} = req.body;
+        const { pk, file2_link, banner_2_status } = req.body;
         let image1 = "";
         let image2 = "";
         let sql = ""
         let values = [];
-            sql = "UPDATE setting_table SET file2_link=?,";
-            values.push(file2_link);
-            if(req.files?.content){
-                image1 = '/image/' + req?.files?.content[0]?.fieldname + '/' + req?.files?.content[0]?.filename;
-                sql += " main_img=?,";
-                values.push(image1);
+        sql = "UPDATE setting_table SET file2_link=?, banner_2_status=?,";
+        values.push(file2_link);
+        values.push(banner_2_status);
+        if (req.files?.content) {
+            image1 = '/image/' + req?.files?.content[0]?.fieldname + '/' + req?.files?.content[0]?.filename;
+            sql += " main_img=?,";
+            values.push(image1);
+        }
+        if (req.files?.content2) {
+            image2 = '/image/' + req?.files?.content2[0]?.fieldname + '/' + req?.files?.content2[0]?.filename;
+            sql += " banner_2_img=?,";
+            values.push(image2);
+        }
+        sql = sql.substring(0, sql.length - 1);
+        sql += " WHERE pk=? ";
+        values.push(pk);
+        db.query(sql, values, (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", [])
+            } else {
+                return response(req, res, 100, "success", [])
             }
-            if(req.files?.content2){
-                image2 = '/image/' + req?.files?.content2[0]?.fieldname + '/' + req?.files?.content2[0]?.filename;
-                sql += " banner_2_img=?,"; 
-                values.push(image2);
-            }
-            sql = sql.substring(0,sql.length-1);
-            sql += " WHERE pk=? ";
-            values.push(pk);
-            db.query(sql, values, (err, result) => {
-                if (err) {
-                    console.log(err)
-                    return response(req, res, -200, "서버 에러 발생", [])
-                } else {
-                    return response(req, res, 100, "success", [])
-                }
-            })
-        
+        })
+
     }
     catch (err) {
         console.log(err)
@@ -2306,7 +2361,7 @@ const setCountNotReadNoti = async (req, res) => {
 module.exports = {
     onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
-    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm,//insert 
-    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm,//update
+    addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm, addPopup,//insert 
+    updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm, updatePopup,//update
     deleteItem, onResign
 };

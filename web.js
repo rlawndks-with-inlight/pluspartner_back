@@ -179,7 +179,7 @@ app.get('/api/item', async (req, res) => {
 
                 let sql = `SELECT * FROM ${table}_table ` + whereStr;
 
-                if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm") {
+                if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm"&& table != "popup") {
                         sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
                 }
                 if (req.query.views) {
