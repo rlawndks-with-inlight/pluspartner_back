@@ -162,7 +162,6 @@ const onSignUp = async (req, res) => {
                         console.log(err)
                         return response(req, res, -200, "비밀번호 암호화 도중 에러 발생", [])
                     } else {
-                        console.log(result.map(item => item.phone))
                         if (result.map(item => item.phone).includes(phone)) {
                             return response(req, res, -100, "가입할 수 없는 전화번호 입니다.", [])
                         } else {
@@ -219,8 +218,6 @@ const onLoginById = async (req, res) => {
                     await crypto.pbkdf2(pw, salt, saltRounds, pwBytes, 'sha512', async (err, decoded) => {
                         // bcrypt.hash(pw, salt, async (err, hash) => {
                         let hash = decoded.toString('base64');
-                        console.log(hash)
-                        console.log(result1[0].pw)
                         if (hash == result1[0].pw) {
                             try {
                                 const token = jwt.sign({
@@ -1074,9 +1071,9 @@ const getVideoContent = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getComments = (req, res) => {
+const getComments = async (req, res) => {
     try {
-
+        const decode = checkLevel(req.cookies.token, 0);
         const { pk, category } = req.query;
         let zColumn = [];
         let columns = ""
@@ -1088,7 +1085,16 @@ const getComments = (req, res) => {
             zColumn.push(category)
             columns += " AND comment_table.category_pk=? ";
         }
-        db.query(`SELECT comment_table.*, user_table.nickname, user_table.profile_img FROM comment_table LEFT JOIN user_table ON comment_table.user_pk = user_table.pk WHERE 1=1 ${columns} ORDER BY pk DESC`, zColumn, (err, result) => {
+        let block_users = [0];
+        if(decode){
+            block_users = await dbQueryList(`SELECT * FROM hate_table WHERE user_pk=${decode?.pk} AND type=1 `);
+            block_users = block_users?.result;
+            block_users = block_users.map(item =>{
+                return item?.item_pk
+            })
+            block_users = [...block_users, ...[0]];
+        }
+        db.query(`SELECT comment_table.*, user_table.nickname, user_table.profile_img FROM comment_table LEFT JOIN user_table ON comment_table.user_pk = user_table.pk WHERE comment_table.user_pk NOT IN (${block_users.join()}) ${columns} ORDER BY pk DESC`, zColumn, (err, result) => {
             if (err) {
                 console.log(err)
                 return response(req, res, -200, "fail", [])
@@ -1495,7 +1501,7 @@ const addPopup = (req, res) => {
 }
 const updatePopup = (req, res) => {
     try {
-        const { link,  pk } = req.body;
+        const { link, pk } = req.body;
         let zColumn = [link];
         let columns = " link=?";
         let image = "";
@@ -1532,7 +1538,7 @@ const getItem = async (req, res) => {
         }
 
         let sql = `SELECT * FROM ${table}_table ` + whereStr;
-        if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm"&& table != "popup") {
+        if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm" && table != "popup") {
             sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
         }
         if (req.query.views) {
@@ -2023,68 +2029,142 @@ const getOneEvent = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getItems = (req, res) => {
+const onHateItem = async (req, res) => {
     try {
-        let { level, category_pk, status, user_pk, keyword, limit, page, page_cut, order } = req.query;
+        const decode = checkLevel(req.cookies.token, 0);
+        if (!decode) {
+            return response(req, res, -150, "권한이 없습니다.", []);
+        }
+        const { item_pk, type } = req.body;
+        let history_result = await dbQueryList(`SELECT * FROM hate_table WHERE user_pk=? AND item_pk=? AND type=?`, [decode?.pk, item_pk, type]);
+        history_result = history_result?.result;
+        let err_message = "";
+        if (type == 0)
+            err_message = "이미 신고한 댓글입니다.";
+        else if (type == 1)
+            err_message = "이미 차단한 유저입니다.";
+        if (history_result.length > 0) {
+            return response(req, res, -100, err_message, []);
+        }
+        let result = await insertQuery('INSERT INTO hate_table (user_pk, item_pk, type) VALUES (?, ?, ?)', [decode?.pk, item_pk, type]);
+        return response(req, res, 100, "success", [])
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const getSqlByTable = (page_sql_, sql_, table_, query_) =>{
+    let page_sql = page_sql_;
+    let sql = sql_;
+    let table = table_;
+    let query = query_;
+    if(table == 'hate'){
+        if(query.type==0){
+            sql = `SELECT ${table}_table.*, user_table.id AS user_id, comment_table.note AS comment, comment_table.user_pk AS p_user_pk  FROM ${table}_table  `;
+            sql += ` LEFT JOIN user_table ON ${table}_table.user_pk=user_table.pk `;
+            sql += ` LEFT JOIN comment_table ON ${table}_table.item_pk=comment_table.pk `;
+        }
+        if(query.type==1){
+            sql = `SELECT ${table}_table.*, u_t.id AS u_t_id , i_t.id AS i_t_id FROM ${table}_table  `;
+            sql += ` LEFT JOIN user_table AS u_t ON ${table}_table.user_pk=u_t.pk `;
+            sql += ` LEFT JOIN user_table AS i_t ON ${table}_table.item_pk=i_t.pk `;
+        }
+    }
+    if(table=='comment'){
+        sql = `SELECT ${table}_table.*, (SELECT COUNT(*) FROM hate_table WHERE type=0 AND item_pk=${table}_table.pk) AS declare_count FROM comment_table `
+    }
+    return {
+        page_sql,
+        sql,
+        table
+    }
+}
+const getResultDataByTable = async (data_, table_, query_) =>{
+    let data = data_;
+    let table = table_;
+    let query = query_;
+    if(table == 'hate'){
+        if(query.type==0){
+            let user_pk_list = data.map((item)=>{
+                return item?.p_user_pk
+            })
+            let user_list = await dbQueryList(`SELECT * FROM user_table WHERE pk IN (${user_pk_list.join()})`);
+            user_list = user_list?.result;
+            data = data.map((item)=>{
+                let find_index = user_list.findIndex((e)=>e.pk==item.p_user_pk);
+                return {...item, p_user_id: user_list[find_index]?.id, p_user_nick: user_list[find_index]?.nickname}
+            })
+        }
+    }
+
+    return data;
+}
+const getItems = async (req, res) => {
+    try {
+        let { level, category_pk, status, user_pk, keyword, limit, page, page_cut, order, type } = req.query;
         let table = req.query.table ?? "user";
         let sql = `SELECT * FROM ${table}_table `;
         let pageSql = `SELECT COUNT(*) FROM ${table}_table `;
-
         let whereStr = " WHERE 1=1 ";
+
+        sql = (await getSqlByTable(pageSql, sql, table, {...req.query})).sql;
+        pageSql = (await getSqlByTable(pageSql, sql, table, {...req.query})).page_sql;
         if (level) {
-
-            whereStr += ` AND user_level=${level} `;
-
+            whereStr += ` AND ${table}_table.user_level=${level} `;
         }
         if (category_pk) {
-            whereStr += ` AND category_pk=${category_pk} `;
+            whereStr += ` AND ${table}_table.category_pk=${category_pk} `;
         }
         if (status) {
-            whereStr += ` AND status=${status} `;
+            whereStr += ` AND ${table}_table.status=${status} `;
+        }
+        if (type) {
+            whereStr += ` AND ${table}_table.type=${type} `;
         }
         if (user_pk) {
-            whereStr += ` AND user_pk=${user_pk} `;
+            whereStr += ` AND ${table}_table.user_pk=${user_pk} `;
         }
         if (keyword) {
             if (table == 'comment') {
-                whereStr += ` AND (item_title LIKE '%${keyword}%' OR user_nickname LIKE '%${keyword}%' OR note LIKE '%${keyword}%') `;
+                whereStr += ` AND (${table}_table.item_title LIKE '%${keyword}%' OR ${table}_table.user_nickname LIKE '%${keyword}%' OR ${table}_table.note LIKE '%${keyword}%') `;
             } else {
-                whereStr += ` AND title LIKE '%${keyword}%' `;
+                whereStr += ` AND ${table}_table.title LIKE '%${keyword}%' `;
             }
         }
         if (!page_cut) {
             page_cut = 15;
         }
         pageSql = pageSql + whereStr;
-        sql = sql + whereStr + ` ORDER BY ${order ? order : 'sort'} DESC `;
+        sql = sql + whereStr + ` ORDER BY ${table}_table.${order ? order : 'sort'} DESC `;
         if (limit && !page) {
             sql += ` LIMIT ${limit} `;
         }
         if (page) {
-
             sql += ` LIMIT ${(page - 1) * page_cut}, ${page_cut}`;
             db.query(pageSql, async (err, result1) => {
                 if (err) {
                     console.log(err)
                     return response(req, res, -200, "서버 에러 발생", [])
                 } else {
-                    await db.query(sql, (err, result2) => {
+                    await db.query(sql, async (err, result2) => {
                         if (err) {
                             console.log(err)
                             return response(req, res, -200, "서버 에러 발생", [])
                         } else {
+                            let result = await getResultDataByTable(result2,  table, {...req.query});
                             let maxPage = result1[0]['COUNT(*)'] % page_cut == 0 ? (result1[0]['COUNT(*)'] / page_cut) : ((result1[0]['COUNT(*)'] - result1[0]['COUNT(*)'] % page_cut) / page_cut + 1);
-                            return response(req, res, 100, "success", { data: result2, maxPage: maxPage });
+                            return response(req, res, 100, "success", { data: result, maxPage: maxPage });
                         }
                     })
                 }
             })
         } else {
-            db.query(sql, (err, result) => {
+            db.query(sql,async (err, result) => {
                 if (err) {
                     console.log(err)
                     return response(req, res, -200, "서버 에러 발생", [])
                 } else {
+                    let result_ = await getResultDataByTable(result, table, {...req.query});
                     return response(req, res, 100, "success", result)
                 }
             })
@@ -2112,6 +2192,7 @@ const getSetting = (req, res) => {
 }
 const deleteItem = (req, res) => {
     try {
+        
         let pk = req.body.pk ?? 0;
         let table = req.body.table ?? "";
         let sql = `DELETE FROM ${table}_table WHERE pk=? `
@@ -2129,9 +2210,52 @@ const deleteItem = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const deleteHate = async (req, res) => {
+    try {
+        const decode = checkLevel(req.cookies.token, 0);
+        if (!decode) {
+            return response(req, res, -150, "권한이 없습니다.", [])
+        }
+        console.log(req.body)
+        let pk = req.body.pk ?? 0;
+        let sql = `DELETE FROM hate_table WHERE pk=? `
+        let block = await dbQueryList(`SELECT * FROM hate_table WHERE pk=${pk}`);
+        block = block?.result[0];
+        if(block?.user_pk!=decode?.pk){
+            return response(req, res, -100, "권한이 없습니다.", []);
+        }
+        db.query(sql, [pk], (err, result) => {
+            if (err) {
+                console.log(err)
+                return response(req, res, -200, "서버 에러 발생", []);
+            } else {
+                return response(req, res, 100, "success", []);
+            }
+        })
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const getHateList = async (req, res) =>{
+    try {
+        const decode = checkLevel(req.cookies.token, 0);
+        if (!decode) {
+            return response(req, res, -150, "권한이 없습니다.", [])
+        }
+        let result = await dbQueryList(`SELECT hate_table.*, user_table.nickname AS nickname FROM hate_table LEFT JOIN user_table ON hate_table.item_pk=user_table.pk WHERE hate_table.type=1 AND hate_table.user_pk=${decode?.pk} ORDER BY hate_table.pk DESC`);
+        result = result?.result;
+        return response(req, res, 100, "success", result);
+    }
+    catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
 const addSetting = (req, res) => {
     try {
-        const decode = checkLevel(req.cookies.token, 25)
+        const decode = checkLevel(req.cookies.token, 25);
         if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
@@ -2363,5 +2487,5 @@ module.exports = {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm, addPopup,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm, updatePopup,//update
-    deleteItem, onResign
+    deleteItem, onResign, onHateItem, getHateList, deleteHate
 };

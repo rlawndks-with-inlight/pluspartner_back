@@ -4,7 +4,6 @@ const dbQueryRows = (sql) => {
     return new Promise((resolve, reject) => {
         db.query(sql, (err, result, fields) => {
             if (err) {
-                console.log(sql)
                 console.log(err)
                 reject({
                     code: -200,
@@ -20,11 +19,10 @@ const dbQueryRows = (sql) => {
         })
     })
 }
-const dbQueryList = (sql) => {
+const dbQueryList = (sql, list) => {
     return new Promise((resolve, reject) => {
-        db.query(sql, (err, result, fields) => {
+        db.query(sql, list, (err, result, fields) => {
             if (err) {
-                console.log(sql)
                 console.log(err)
                 reject({
                     code: -200,
@@ -63,7 +61,6 @@ const getTableAI = (table) => {
     return new Promise((resolve, reject) => {
         db.query(`SHOW TABLE STATUS LIKE '${table}_table'`, (err, result, fields) => {
             if (err) {
-                console.log(sql)
                 console.log(err)
                 reject({
                     code: -200,
@@ -73,7 +70,7 @@ const getTableAI = (table) => {
             else {
                 resolve({
                     code: 200,
-                    result: result[0]?.Auto_increment??0
+                    result: result[0]?.Auto_increment ?? 0
                 })
             }
         })

@@ -6,7 +6,7 @@ const {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm, addPopup,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm, updatePopup,//update
-    deleteItem, onResign
+    deleteItem, onResign, onHateItem, getHateList, deleteHate
 } = require('./api')
 
 router.post('/addalarm', addAlarm);
@@ -64,6 +64,9 @@ router.get('/video/:pk', getVideo);
 router.post('/onthetopitem', onTheTopItem);
 router.post('/changeitemsequence', changeItemSequence);
 router.get('/getcommnets', getComments);
+router.post('/onhateitem', onHateItem);
+router.get('/gethatelist', getHateList);
+router.post('/deletehate', deleteHate);
 router.post('/addcomment', addComment);
 router.post('/updatecomment', updateComment);
 router.get('/getcommentsmanager', getCommentsManager);
