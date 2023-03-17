@@ -6,7 +6,7 @@ const {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm, addPopup,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm, updatePopup,//update
-    deleteItem, onResign, onHateItem, getHateList, deleteHate
+    deleteItem, onResign, onHateItem, getHateList, deleteHate, insertVisit
 } = require('./api')
 
 router.post('/addalarm', addAlarm);
@@ -72,6 +72,7 @@ router.post('/updatecomment', updateComment);
 router.get('/getcommentsmanager', getCommentsManager);
 router.post('/getcountnotreadnoti', getCountNotReadNoti);
 router.get('/getnoticeandalarmlastpk', getNoticeAndAlarmLastPk);
+router.post('/insertvisit', insertVisit);
 router.post('/addpopup',upload.single('content'), addPopup);
 router.post('/updatepopup',upload.single('content'), updatePopup);
 

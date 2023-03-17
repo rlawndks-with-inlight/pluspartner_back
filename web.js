@@ -76,7 +76,6 @@ overFiveTime = overFiveTime.getTime();
 
 const scheduleAlarm = () => {
         schedule.scheduleJob('0 0/1 * * * *', async function () {
-                console.log(returnMoment());
                 let date = returnMoment().substring(0, 10);
                 let dayOfWeek = new Date(date).getDay()
                 let result = await dbQueryList(`SELECT * FROM alarm_table WHERE ((DATEDIFF(?, start_date) >= 0 AND days LIKE '%${dayOfWeek}%' AND type=1) OR ( start_date=? AND type=2 )) AND STATUS=1`, [date, date]);
@@ -92,7 +91,7 @@ const scheduleAlarm = () => {
 
                                 if (item_time >= time && item_time < overFiveTime) {
                                         sendAlarm(list[i].title, list[i].note, "alarm", list[i].pk, list[i].url);
-                                        insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [list[i].title, list[i].note, "alarm", list[i].pk, list[i].url])
+                                        await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [list[i].title, list[i].note, "alarm", list[i].pk, list[i].url])
                                 }
                         }
                 }

@@ -61,7 +61,7 @@ const addAlarm = (req, res) => {
             else {
                 if (type == 0) {
                     sendAlarm(title, note, "alarm", result.insertId, url);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [title, note, "alarm", result.insertId, url])
+                    await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [title, note, "alarm", result.insertId, url])
                 }
                 await db.query("UPDATE alarm_table SET sort=? WHERE pk=?", [result.insertId, result.insertId], (err, result) => {
                     if (err) {
@@ -1086,10 +1086,10 @@ const getComments = async (req, res) => {
             columns += " AND comment_table.category_pk=? ";
         }
         let block_users = [0];
-        if(decode){
+        if (decode) {
             block_users = await dbQueryList(`SELECT * FROM hate_table WHERE user_pk=${decode?.pk} AND type=1 `);
             block_users = block_users?.result;
-            block_users = block_users.map(item =>{
+            block_users = block_users.map(item => {
                 return item?.item_pk
             })
             block_users = [...block_users, ...[0]];
@@ -1297,7 +1297,7 @@ const addItem = (req, res) => {
             } else {
                 if (want_push == 1) {
                     sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) + title, note, table, result.insertId, `/post/${table}/${result.insertId}`])
+                    await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) + title, note, table, result.insertId, `/post/${table}/${result.insertId}`])
 
                 }
                 await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.insertId, result?.insertId], (err, resultup) => {
@@ -1583,7 +1583,7 @@ const addVideo = (req, res) => {
             } else {
                 if (want_push == 1) {
                     sendAlarm(`${title}`, "", "video", result.insertId, `/video/${result.insertId}`);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("video") + title, "", "video", result.insertId, `/video/${result.insertId}`])
+                    await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("video") + title, "", "video", result.insertId, `/video/${result.insertId}`])
 
                 }
                 await db.query("UPDATE video_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], (err, resultup) => {
@@ -1673,7 +1673,7 @@ const addNotice = (req, res) => {
             } else {
                 if (want_push == 1) {
                     sendAlarm(`${title}`, "", "notice", result.insertId, `/post/notice/${result.insertId}`);
-                    insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("notice") + title, "", "notice", result.insertId, `/post/notice/${result.insertId}`])
+                    await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("notice") + title, "", "notice", result.insertId, `/post/notice/${result.insertId}`])
 
                 }
                 //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, "", "notice", result.insertId])
@@ -1869,6 +1869,23 @@ function getDateRangeData(param1, param2) {  //param1은 시작일, param2는 �
     }
     return res_day;
 }
+const insertVisit = async (req, res) => {
+    try {
+        const {pathname} = req.body;
+        const decode = checkLevel(req.cookies.token, 0);
+        let requestIp;
+        try {
+            requestIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip || '0.0.0.0'
+        } catch (err) {
+            requestIp = '0.0.0.0'
+        }
+        let result = await insertQuery(`INSERT INTO visit_table (ip, user_pk, pathname) VALUES (?, ?, ?)`, [requestIp, decode?.pk ?? 0, pathname]);
+        return response(req, res, 100, "success", []);
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", []);
+    }
+}
 const getUserStatistics = async (req, res) => {
     try {
         let { page, page_cut, year, month, type } = req.query;
@@ -1940,7 +1957,33 @@ const getUserStatistics = async (req, res) => {
                 views_count: 0
             })
         }
-
+        let visits = await dbQueryList(`SELECT *, DATE_FORMAT(date, '%Y-%m-%d') AS date FROM visit_table ${subStr}`);
+        visits = visits?.result;
+        let visit_obj = {};
+        console.log(visits);
+        for(var i =0;i<visits.length;i++){
+            if(!visit_obj[visits[i]?.date]){
+                visit_obj[visits[i]?.date] = {
+                    views:0,
+                    visit:[]
+                }
+            }
+            if(visits[i].pathname && (visits[i].pathname.includes('/post/') || visits[i].pathname.includes('/video/'))){
+                visit_obj[visits[i]?.date].views++; 
+            }
+            if(!visit_obj[visits[i]?.date]?.visit.includes(visits[i].ip)){
+                visit_obj[visits[i]?.date]?.visit.push(visits[i].ip)
+            }
+        }
+        for(var i = 0;i<result_list.length;i++){
+            let keys = Object.keys(visit_obj);
+            for(var j =0;j<keys.length;j++){
+                if(keys[j].includes(result_list[i].date)){
+                    result_list[i].views_count += visit_obj[keys[j]].views;
+                    result_list[i].visit_count += visit_obj[keys[j]].visit.length;
+                }
+            }
+        }
         for (var i = 0; i < result.length; i++) {
             let date_column = ``;
             let count_column = ``;
@@ -1970,8 +2013,9 @@ const getUserStatistics = async (req, res) => {
         }
         let maxPage = makeMaxPage(result_list.length, page_cut);
         let result_obj = {};
+        let visit_table
         if (page) {
-            result_list = result_list.slice((page - 1) * page_cut, (page) * page_cut)
+            result_list = result_list.slice((page - 1) * page_cut, (page) * page_cut);
             result_obj = { data: result_list, maxPage: maxPage };
         } else {
             result_obj = result_list;
@@ -2053,24 +2097,24 @@ const onHateItem = async (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getSqlByTable = (page_sql_, sql_, table_, query_) =>{
+const getSqlByTable = (page_sql_, sql_, table_, query_) => {
     let page_sql = page_sql_;
     let sql = sql_;
     let table = table_;
     let query = query_;
-    if(table == 'hate'){
-        if(query.type==0){
+    if (table == 'hate') {
+        if (query.type == 0) {
             sql = `SELECT ${table}_table.*, user_table.id AS user_id, comment_table.note AS comment, comment_table.user_pk AS p_user_pk  FROM ${table}_table  `;
             sql += ` LEFT JOIN user_table ON ${table}_table.user_pk=user_table.pk `;
             sql += ` LEFT JOIN comment_table ON ${table}_table.item_pk=comment_table.pk `;
         }
-        if(query.type==1){
+        if (query.type == 1) {
             sql = `SELECT ${table}_table.*, u_t.id AS u_t_id , i_t.id AS i_t_id FROM ${table}_table  `;
             sql += ` LEFT JOIN user_table AS u_t ON ${table}_table.user_pk=u_t.pk `;
             sql += ` LEFT JOIN user_table AS i_t ON ${table}_table.item_pk=i_t.pk `;
         }
     }
-    if(table=='comment'){
+    if (table == 'comment') {
         sql = `SELECT ${table}_table.*, (SELECT COUNT(*) FROM hate_table WHERE type=0 AND item_pk=${table}_table.pk) AS declare_count FROM comment_table `
     }
     return {
@@ -2079,20 +2123,20 @@ const getSqlByTable = (page_sql_, sql_, table_, query_) =>{
         table
     }
 }
-const getResultDataByTable = async (data_, table_, query_) =>{
+const getResultDataByTable = async (data_, table_, query_) => {
     let data = data_;
     let table = table_;
     let query = query_;
-    if(table == 'hate'){
-        if(query.type==0){
-            let user_pk_list = data.map((item)=>{
+    if (table == 'hate') {
+        if (query.type == 0) {
+            let user_pk_list = data.map((item) => {
                 return item?.p_user_pk
             })
             let user_list = await dbQueryList(`SELECT * FROM user_table WHERE pk IN (${user_pk_list.join()})`);
             user_list = user_list?.result;
-            data = data.map((item)=>{
-                let find_index = user_list.findIndex((e)=>e.pk==item.p_user_pk);
-                return {...item, p_user_id: user_list[find_index]?.id, p_user_nick: user_list[find_index]?.nickname}
+            data = data.map((item) => {
+                let find_index = user_list.findIndex((e) => e.pk == item.p_user_pk);
+                return { ...item, p_user_id: user_list[find_index]?.id, p_user_nick: user_list[find_index]?.nickname }
             })
         }
     }
@@ -2107,8 +2151,8 @@ const getItems = async (req, res) => {
         let pageSql = `SELECT COUNT(*) FROM ${table}_table `;
         let whereStr = " WHERE 1=1 ";
 
-        sql = (await getSqlByTable(pageSql, sql, table, {...req.query})).sql;
-        pageSql = (await getSqlByTable(pageSql, sql, table, {...req.query})).page_sql;
+        sql = (await getSqlByTable(pageSql, sql, table, { ...req.query })).sql;
+        pageSql = (await getSqlByTable(pageSql, sql, table, { ...req.query })).page_sql;
         if (level) {
             whereStr += ` AND ${table}_table.user_level=${level} `;
         }
@@ -2151,7 +2195,7 @@ const getItems = async (req, res) => {
                             console.log(err)
                             return response(req, res, -200, "서버 에러 발생", [])
                         } else {
-                            let result = await getResultDataByTable(result2,  table, {...req.query});
+                            let result = await getResultDataByTable(result2, table, { ...req.query });
                             let maxPage = result1[0]['COUNT(*)'] % page_cut == 0 ? (result1[0]['COUNT(*)'] / page_cut) : ((result1[0]['COUNT(*)'] - result1[0]['COUNT(*)'] % page_cut) / page_cut + 1);
                             return response(req, res, 100, "success", { data: result, maxPage: maxPage });
                         }
@@ -2159,12 +2203,12 @@ const getItems = async (req, res) => {
                 }
             })
         } else {
-            db.query(sql,async (err, result) => {
+            db.query(sql, async (err, result) => {
                 if (err) {
                     console.log(err)
                     return response(req, res, -200, "서버 에러 발생", [])
                 } else {
-                    let result_ = await getResultDataByTable(result, table, {...req.query});
+                    let result_ = await getResultDataByTable(result, table, { ...req.query });
                     return response(req, res, 100, "success", result)
                 }
             })
@@ -2192,7 +2236,7 @@ const getSetting = (req, res) => {
 }
 const deleteItem = (req, res) => {
     try {
-        
+
         let pk = req.body.pk ?? 0;
         let table = req.body.table ?? "";
         let sql = `DELETE FROM ${table}_table WHERE pk=? `
@@ -2221,7 +2265,7 @@ const deleteHate = async (req, res) => {
         let sql = `DELETE FROM hate_table WHERE pk=? `
         let block = await dbQueryList(`SELECT * FROM hate_table WHERE pk=${pk}`);
         block = block?.result[0];
-        if(block?.user_pk!=decode?.pk){
+        if (block?.user_pk != decode?.pk) {
             return response(req, res, -100, "권한이 없습니다.", []);
         }
         db.query(sql, [pk], (err, result) => {
@@ -2238,7 +2282,7 @@ const deleteHate = async (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const getHateList = async (req, res) =>{
+const getHateList = async (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 0);
         if (!decode) {
@@ -2487,5 +2531,5 @@ module.exports = {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm, addPopup,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm, updatePopup,//update
-    deleteItem, onResign, onHateItem, getHateList, deleteHate
+    deleteItem, onResign, onHateItem, getHateList, deleteHate, insertVisit
 };

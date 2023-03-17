@@ -263,7 +263,7 @@ function getSQLnParams(query, params, colNames) {
     }
     return { sql, param: returnParams }
 }
-let concentration_user_list = [5531, 5191, 19817, 22539];
+let concentration_user_list = [];
 function response(req, res, code, message, data) {
     var resDict = {
         'result': code,
@@ -271,9 +271,8 @@ function response(req, res, code, message, data) {
         'data': data,
     }
     const decode = checkLevel(req.cookies.token, 0)
-    if (code < 0 || req.originalUrl.includes('login') || concentration_user_list.includes(decode?.pk)) {
+    if (code < 0 || req.originalUrl.includes('login') || concentration_user_list.includes(decode?.pk) || decode?.user_level >= 30 ) {
         logRequestResponse(req, resDict, decode);
-
     }
     res.send(resDict);
 }
