@@ -77,7 +77,8 @@ overFiveTime = overFiveTime.getTime();
 const scheduleAlarm = () => {
         schedule.scheduleJob('0 0/1 * * * *', async function () {
                 let date = returnMoment().substring(0, 10);
-                let dayOfWeek = new Date(date).getDay()
+                let date_time = returnMoment();
+                let dayOfWeek = new Date(date).getDay();
                 let result = await dbQueryList(`SELECT * FROM alarm_table WHERE ((DATEDIFF(?, start_date) >= 0 AND days LIKE '%${dayOfWeek}%' AND type=1) OR ( start_date=? AND type=2 )) AND STATUS=1`, [date, date]);
                 if (result.code > 0) {
                         let list = [...result.result];
@@ -94,6 +95,9 @@ const scheduleAlarm = () => {
                                         await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [list[i].title, list[i].note, "alarm", list[i].pk, list[i].url])
                                 }
                         }
+                }
+                if(date_time.includes('11:59')){
+                        let result = await insertQuery(`INSERT `)
                 }
         })
 }
@@ -170,8 +174,13 @@ app.get('/api/item', async (req, res) => {
                 let whereStr = " WHERE pk=? ";
                 const decode = checkLevel(req.cookies.token, 0)
                 if ((!decode || decode?.user_level == -10) && table !== 'notice') {
-                        return response(req, res, -150, "권한이 없습니다.", [])
+                        let msg = "로그인을 해주세요."
+                        if(decode?.user_level == -10){
+                                msg = "권한이 없습니다.";
+                        }
+                        return response(req, res, -150, msg, [])
                 }
+                
                 if (table == "setting") {
                         whereStr = "";
                 }
