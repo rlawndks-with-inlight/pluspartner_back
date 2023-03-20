@@ -1259,7 +1259,7 @@ const getKoreaByEng = (str) => {
     }
     return ans;
 }
-const addItem = (req, res) => {
+const addItem = async (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
         if (!decode) {
@@ -1290,29 +1290,21 @@ const addItem = (req, res) => {
         }
         columns += ')';
         values += ')';
-        db.query(`INSERT INTO ${table}_table ${columns} VALUES ${values}`, zColumn, async (err, result) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "서버 에러 발생", []);
-            } else {
-                if (want_push == 1) {
-                    sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result.insertId, `/post/${table}/${result.insertId}`);
-                    await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) + title, note, table, result.insertId, `/post/${table}/${result.insertId}`])
+        await db.beginTransaction();
 
-                }
-                await db.query(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.insertId, result?.insertId], (err, resultup) => {
-                    if (err) {
-                        console.log(err)
-                        return response(req, res, -200, "fail", [])
-                    }
-                    else {
-                        return response(req, res, 200, "success", [])
-                    }
-                })
-            }
-        })
+        let result = await insertQuery(`INSERT INTO ${table}_table ${columns} VALUES ${values}`, zColumn);
+        if (want_push == 1) {
+            sendAlarm(`${getKoreaByEng(table) + title}`, "", "notice", result?.result?.insertId, `/post/${table}/${result?.result?.insertId}`);
+            await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) + title, note, table, result?.result?.insertId, `/post/${table}/${result?.result?.insertId}`])
+
+        }
+        let result2 = await insertQuery(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.result?.insertId, result?.result?.insertId]);
+        db.commit();
+        return response(req, res, 200, "success", []);
+       
     } catch (err) {
-        console.log(err)
+        console.log(err);
+        await db.rollback();
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
