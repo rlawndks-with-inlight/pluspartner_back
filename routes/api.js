@@ -1121,18 +1121,18 @@ const addComment = async (req, res) => {
         let { pk, parentPk, title, note, category } = req.body;
         let userPk = auth.pk;
         let userNick = auth.nickname;
-        if(!note){
+        if (!note) {
             return response(req, res, -100, "댓글을 작성해 주세요.", []);
         }
         let prohibit_comments = await dbQueryList(`SELECT * FROM prohibit_comment_table ORDER BY pk DESC`);
         prohibit_comments = prohibit_comments?.result;
         let is_prohibit = false;
-        for(var i= 0;i<prohibit_comments.length;i++){
-            if(note.includes(prohibit_comments[i]?.note)){
+        for (var i = 0; i < prohibit_comments.length; i++) {
+            if (note.includes(prohibit_comments[i]?.note)) {
                 is_prohibit = true;
             }
         }
-        if(is_prohibit){
+        if (is_prohibit) {
             return response(req, res, -100, "댓글 내에 금지단어가 포함되어 있습니다.", []);
         }
         await db.beginTransaction();
@@ -1142,29 +1142,29 @@ const addComment = async (req, res) => {
         your_comments = your_comments?.result;
         let message = "success"
         let result_code = 200;
-        if(your_comments.length >= 3){//도배로 판단되어 1일간 댓글 작성 금지 response 발송
+        if (your_comments.length >= 3) {//도배로 판단되어 1일간 댓글 작성 금지 response 발송
             let last_comment_time = your_comments[0]?.date;
             let first_comment_time = your_comments[2]?.date;
             last_comment_time = new Date(last_comment_time).getTime();
             first_comment_time = new Date(first_comment_time).getTime();
-            if(last_comment_time- first_comment_time < 10*60*1000 
+            if (last_comment_time - first_comment_time < 10 * 60 * 1000
                 && decode?.user_level <= 0
-                ){
+            ) {
                 message = `10분내 댓글 3회 이상 작성\n도배 의심되어 1일간 댓글 작성 금지됩니다.\n마지막 댓글시간: ${your_comments[0]?.date}`;
                 result_code = 150;
             }
         }
-        if(your_comments.length >= 4){//도배 댓글 차단
+        if (your_comments.length >= 4) {//도배 댓글 차단
             let now_comment_time = your_comments[0]?.date;
             let last_comment_time = your_comments[1]?.date;//금지받게된 댓글
             let first_comment_time = your_comments[3]?.date;
             now_comment_time = new Date(now_comment_time).getTime();
             last_comment_time = new Date(last_comment_time).getTime();
             first_comment_time = new Date(first_comment_time).getTime();
-            if(last_comment_time- first_comment_time < 10*60*1000 
+            if (last_comment_time - first_comment_time < 10 * 60 * 1000
                 && decode?.user_level <= 0
-                && now_comment_time - last_comment_time <= 24*60*60*1000
-            ){
+                && now_comment_time - last_comment_time <= 24 * 60 * 60 * 1000
+            ) {
                 await db.rollback();
                 return response(req, res, -100, `도배로 인해 댓글 작성 1일간 금지되었습니다.\n마지막 댓글시간: ${your_comments[0]?.date}`, []);
             }
@@ -1181,18 +1181,18 @@ const addComment = async (req, res) => {
 const updateComment = async (req, res) => {
     try {
         const { pk, note } = req.body;
-        if(!note){
+        if (!note) {
             return response(req, res, -100, "댓글을 작성해 주세요.", []);
         }
         let prohibit_comments = await dbQueryList(`SELECT * FROM prohibit_comment_table ORDER BY pk DESC`);
         prohibit_comments = prohibit_comments?.result;
         let is_prohibit = false;
-        for(var i= 0;i<prohibit_comments.length;i++){
-            if(note.includes(prohibit_comments[i]?.note)){
+        for (var i = 0; i < prohibit_comments.length; i++) {
+            if (note.includes(prohibit_comments[i]?.note)) {
                 is_prohibit = true;
             }
         }
-        if(is_prohibit){
+        if (is_prohibit) {
             return response(req, res, -100, "댓글 내에 금지단어가 포함되어 있습니다.", []);
         }
         let result = await insertQuery("UPDATE comment_table SET note=? WHERE pk=?", [note, pk]);
@@ -2000,7 +2000,6 @@ const getUserStatistics = async (req, res) => {
             }
             format = '%Y-%m';
         } else {
-
             dates = getDateRangeData(new Date(`${year}-${month < 10 ? `0${month}` : `${month}`}-01`), new Date(`${year}-${month < 10 ? `0${month}` : `${month}`}-31`));
             format = '%Y-%m-%d';
         }
@@ -2024,9 +2023,9 @@ const getUserStatistics = async (req, res) => {
         ]
         let subStr = ``;
         if (type == 'day') {
-            subStr = ` WHERE SUBSTR(DATE, 1, 7)='${year + `-${month < 10 ? `0${month}` : month}`}' `;
+            subStr = ` WHERE DATE_FORMAT(date, '%Y-%m')='${year + `-${month < 10 ? `0${month}` : month}`}' `;
         } else if (type == 'month') {
-            subStr = ` WHERE SUBSTR(DATE, 1, 4)='${year}' `;
+            subStr = ` WHERE DATE_FORMAT(date, '%Y')='${year}' `;
         } else {
             return response(req, res, -100, "fail", [])
         }
