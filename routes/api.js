@@ -1108,7 +1108,7 @@ const getComments = async (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const addComment = (req, res) => {
+const addComment = async (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 0);
         let auth = {};
@@ -1121,33 +1121,83 @@ const addComment = (req, res) => {
         let { pk, parentPk, title, note, category } = req.body;
         let userPk = auth.pk;
         let userNick = auth.nickname;
-        db.query("INSERT INTO comment_table (user_pk, user_nickname, item_pk, item_title, note, category_pk, parent_pk) VALUES (?, ?, ?, ?, ?, ?, ?)", [userPk, userNick, pk, title, note, category, parentPk], (err, result) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "fail", [])
+        if(!note){
+            return response(req, res, -100, "댓글을 작성해 주세요.", []);
+        }
+        let prohibit_comments = await dbQueryList(`SELECT * FROM prohibit_comment_table ORDER BY pk DESC`);
+        prohibit_comments = prohibit_comments?.result;
+        let is_prohibit = false;
+        for(var i= 0;i<prohibit_comments.length;i++){
+            if(note.includes(prohibit_comments[i]?.note)){
+                is_prohibit = true;
             }
-            else {
-                return response(req, res, 200, "success", [])
+        }
+        if(is_prohibit){
+            return response(req, res, -100, "댓글 내에 금지단어가 포함되어 있습니다.", []);
+        }
+        await db.beginTransaction();
+        let result = await insertQuery("INSERT INTO comment_table (user_pk, user_nickname, item_pk, item_title, note, category_pk, parent_pk) VALUES (?, ?, ?, ?, ?, ?, ?)", [userPk, userNick, pk, title, note, category, parentPk]);
+
+        let your_comments = await dbQueryList(`SELECT * FROM comment_table WHERE user_pk=${decode?.pk} ORDER BY pk DESC`);
+        your_comments = your_comments?.result;
+        let message = "success"
+        let result_code = 200;
+        if(your_comments.length >= 3){//도배로 판단되어 1일간 댓글 작성 금지 response 발송
+            let last_comment_time = your_comments[0]?.date;
+            let first_comment_time = your_comments[2]?.date;
+            last_comment_time = new Date(last_comment_time).getTime();
+            first_comment_time = new Date(first_comment_time).getTime();
+            if(last_comment_time- first_comment_time < 10*60*1000 
+                && decode?.user_level <= 0
+                ){
+                message = `10분내 댓글 3회 이상 작성\n도배 의심되어 1일간 댓글 작성 금지됩니다.\n마지막 댓글시간: ${your_comments[0]?.date}`;
+                result_code = 150;
             }
-        })
+        }
+        if(your_comments.length >= 4){//도배 댓글 차단
+            let now_comment_time = your_comments[0]?.date;
+            let last_comment_time = your_comments[1]?.date;//금지받게된 댓글
+            let first_comment_time = your_comments[3]?.date;
+            now_comment_time = new Date(now_comment_time).getTime();
+            last_comment_time = new Date(last_comment_time).getTime();
+            first_comment_time = new Date(first_comment_time).getTime();
+            if(last_comment_time- first_comment_time < 10*60*1000 
+                && decode?.user_level <= 0
+                && now_comment_time - last_comment_time <= 24*60*60*1000
+            ){
+                await db.rollback();
+                return response(req, res, -100, `도배로 인해 댓글 작성 1일간 금지되었습니다.\n마지막 댓글시간: ${your_comments[0]?.date}`, []);
+            }
+        }
+        await db.commit();
+        return response(req, res, result_code, message, []);
+
     } catch (err) {
-        console.log(err)
+        console.log(err);
+        await db.rollback();
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
-const updateComment = (req, res) => {
+const updateComment = async (req, res) => {
     try {
         const { pk, note } = req.body;
+        if(!note){
+            return response(req, res, -100, "댓글을 작성해 주세요.", []);
+        }
+        let prohibit_comments = await dbQueryList(`SELECT * FROM prohibit_comment_table ORDER BY pk DESC`);
+        prohibit_comments = prohibit_comments?.result;
+        let is_prohibit = false;
+        for(var i= 0;i<prohibit_comments.length;i++){
+            if(note.includes(prohibit_comments[i]?.note)){
+                is_prohibit = true;
+            }
+        }
+        if(is_prohibit){
+            return response(req, res, -100, "댓글 내에 금지단어가 포함되어 있습니다.", []);
+        }
+        let result = await insertQuery("UPDATE comment_table SET note=? WHERE pk=?", [note, pk]);
+        return response(req, res, 200, "success", []);
 
-        db.query("UPDATE comment_table SET note=? WHERE pk=?", [note, pk], (err, result) => {
-            if (err) {
-                console.log(err)
-                return response(req, res, -200, "fail", [])
-            }
-            else {
-                return response(req, res, 200, "success", [])
-            }
-        })
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -1237,6 +1287,39 @@ const addOneEvent = (req, res) => {
                 })
             }
         })
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const addProhibitComment = async (req, res) => {
+    try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if (!decode) {
+            return response(req, res, -150, "권한이 없습니다.", [])
+        }
+        const { note } = req.body;
+        let zColumn = [note];
+        let columns = "(note)";
+        let values = "(?)";
+        let result = await insertQuery(`INSERT INTO prohibit_comment_table ${columns} VALUES ${values}`, zColumn);
+        return response(req, res, 200, "success", [])
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", [])
+    }
+}
+const updateProhibitComment = async (req, res) => {
+    try {
+        const decode = checkLevel(req.cookies.token, 25)
+        if (!decode) {
+            return response(req, res, -150, "권한이 없습니다.", [])
+        }
+        console.log(req.body)
+        const { note, pk } = req.body;
+        let zColumn = [note, pk];
+        let result = await insertQuery(`UPDATE prohibit_comment_table SET note=? WHERE pk=?`, zColumn);
+        return response(req, res, 200, "success", [])
     } catch (err) {
         console.log(err)
         return response(req, res, -200, "서버 에러 발생", [])
@@ -1615,7 +1698,7 @@ const addVideo = (req, res) => {
                     if (want_push == 1) {
                         sendAlarm(`${title}`, "", "video", result.insertId, `/video/${result.insertId}`);
                         await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("video") + title, "", "video", result.insertId, `/video/${result.insertId}`])
-    
+
                     }
                     return response(req, res, 100, "success", [])
                 }
@@ -1681,7 +1764,7 @@ const addNotice = (req, res) => {
                 console.log(err)
                 return response(req, res, -200, "서버 에러 발생", [])
             } else {
-               
+
                 //insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk) VALUES (?, ?, ?, ?)", [title, "", "notice", result.insertId])
                 await db.query("UPDATE notice_table SET sort=? WHERE pk=?", [result?.insertId, result?.insertId], async (err, resultup) => {
                     if (err) {
@@ -1692,7 +1775,7 @@ const addNotice = (req, res) => {
                         if (want_push == 1) {
                             sendAlarm(`${title}`, "", "notice", result.insertId, `/post/notice/${result.insertId}`);
                             await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("notice") + title, "", "notice", result.insertId, `/post/notice/${result.insertId}`])
-        
+
                         }
                         return response(req, res, 200, "success", [])
                     }
@@ -1949,10 +2032,10 @@ const getUserStatistics = async (req, res) => {
         }
         for (var i = 0; i < sql_obj.length; i++) {
             let sql = "";
-
             sql = `SELECT DATE_FORMAT(date, '${format}') AS ${sql_obj[i].date_colomn}, COUNT(DATE_FORMAT(date, '${format}')) AS ${sql_obj[i].count_column} FROM ${sql_obj[i].table}_table ${subStr} GROUP BY DATE_FORMAT(date, '${format}') ORDER BY ${sql_obj[i].date_colomn} DESC`;
             sql_list.push(queryPromise(sql_obj[i].table, sql));
         }
+
         for (var i = 0; i < sql_list.length; i++) {
             await sql_list[i];
         }
@@ -1971,7 +2054,6 @@ const getUserStatistics = async (req, res) => {
         let visits = await dbQueryList(`SELECT *, DATE_FORMAT(date, '%Y-%m-%d') AS date FROM visit_table ${subStr}`);
         visits = visits?.result;
         let visit_obj = {};
-        console.log(visits);
         for (var i = 0; i < visits.length; i++) {
             if (!visit_obj[visits[i]?.date]) {
                 visit_obj[visits[i]?.date] = {
@@ -2141,13 +2223,30 @@ const getResultDataByTable = async (data_, table_, query_) => {
     if (table == 'hate') {
         if (query.type == 0) {
             let user_pk_list = data.map((item) => {
-                return item?.p_user_pk
+                if (item?.p_user_pk) {
+                    return item?.p_user_pk
+                }
             })
-            let user_list = await dbQueryList(`SELECT * FROM user_table WHERE pk IN (${user_pk_list.join()})`);
-            user_list = user_list?.result;
+            let temp_user_pk_list = [];
+            for (var i = 0; i < user_pk_list.length; i++) {
+                if (user_pk_list[i]) {
+                    temp_user_pk_list.push(user_pk_list[i])
+                }
+            }
+            user_pk_list = temp_user_pk_list;
+            console.log(user_pk_list)
+            let user_list = [];
+            if (user_pk_list.length > 0) {
+                user_list = await dbQueryList(`SELECT * FROM user_table WHERE pk IN (${user_pk_list.join()})`);
+                user_list = user_list?.result;
+            }
             data = data.map((item) => {
                 let find_index = user_list.findIndex((e) => e.pk == item.p_user_pk);
-                return { ...item, p_user_id: user_list[find_index]?.id, p_user_nick: user_list[find_index]?.nickname }
+                if (!find_index) {
+                    return { ...item, p_user_id: "", p_user_nick: "" }
+                } else {
+                    return { ...item, p_user_id: user_list[find_index]?.id, p_user_nick: user_list[find_index]?.nickname }
+                }
             })
         }
     }
@@ -2542,5 +2641,6 @@ module.exports = {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm, addPopup,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm, updatePopup,//update
-    deleteItem, onResign, onHateItem, getHateList, deleteHate, insertVisit
+    deleteItem, onResign, onHateItem, getHateList, deleteHate, insertVisit,
+    addProhibitComment, updateProhibitComment
 };

@@ -96,7 +96,7 @@ const scheduleAlarm = () => {
                                 }
                         }
                 }
-                if(date_time.includes('11:59')){
+                if (date_time.includes('11:59')) {
                         let result = await insertQuery(`INSERT `)
                 }
         })
@@ -175,19 +175,19 @@ app.get('/api/item', async (req, res) => {
                 const decode = checkLevel(req.cookies.token, 0)
                 if ((!decode || decode?.user_level == -10) && table !== 'notice') {
                         let msg = "로그인을 해주세요."
-                        if(decode?.user_level == -10){
+                        if (decode?.user_level == -10) {
                                 msg = "권한이 없습니다.";
                         }
                         return response(req, res, -150, msg, [])
                 }
-                
+
                 if (table == "setting") {
                         whereStr = "";
                 }
 
                 let sql = `SELECT * FROM ${table}_table ` + whereStr;
 
-                if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm"&& table != "popup") {
+                if (table != "user" && table != "issue_category" && table != "feature_category" && table != "alarm" && table != "popup" && table != "prohibit_comment") {
                         sql = `SELECT ${table}_table.* , user_table.nickname, user_table.name FROM ${table}_table LEFT JOIN user_table ON ${table}_table.user_pk = user_table.pk WHERE ${table}_table.pk=? LIMIT 1`
                 }
                 if (req.query.views) {

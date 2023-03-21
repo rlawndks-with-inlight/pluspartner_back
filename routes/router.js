@@ -6,7 +6,8 @@ const {
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm, addPopup,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm, updatePopup,//update
-    deleteItem, onResign, onHateItem, getHateList, deleteHate, insertVisit
+    deleteItem, onResign, onHateItem, getHateList, deleteHate, insertVisit,
+    addProhibitComment, updateProhibitComment
 } = require('./api')
 const image_list = [
     { name: 'master' },
@@ -24,9 +25,12 @@ const image_list = [
     { name: 'pdfimg' },
     { name: 'pdf' },
 ]
+
 router.post('/addimageitems', upload.fields(image_list), addImageItems);
 router.post('/addalarm', addAlarm);
 router.post('/updatealarm', updateAlarm);
+router.post('/addprohibitcomment', addProhibitComment);
+router.post('/updateprohibitcomment', updateProhibitComment);
 router.post('/editmyinfo', editMyInfo);
 router.post('/uploadprofile', upload.single('profile'), uploadProfile)
 router.post('/kakao/callback', kakaoCallBack);
