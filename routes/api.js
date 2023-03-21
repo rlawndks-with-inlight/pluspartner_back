@@ -1301,7 +1301,7 @@ const addItem = async (req, res) => {
         }
         db.commit();
         return response(req, res, 200, "success", []);
-       
+
     } catch (err) {
         console.log(err);
         await db.rollback();
@@ -1343,6 +1343,24 @@ const updateItem = (req, res) => {
         return response(req, res, -200, "서버 에러 발생", [])
     }
 }
+const addImageItems = (req, res) => {
+    try {
+        let files = { ...req.files };
+        let files_keys = Object.keys(files);
+        let result = [];
+        for (var i = 0; i < files_keys.length; i++) {
+            result.push({
+                key: files_keys[i],
+                filename: '/image/' + req.files[files_keys[i]][0].fieldname + '/' + req.files[files_keys[i]][0].filename
+            })
+        }
+        return response(req, res, 100, "success", result);
+    } catch (err) {
+        console.log(err)
+        return response(req, res, -200, "서버 에러 발생", []);
+    }
+}
+
 const addIssueCategory = (req, res) => {
     try {
         const decode = checkLevel(req.cookies.token, 25)
@@ -1863,7 +1881,7 @@ function getDateRangeData(param1, param2) {  //param1은 시작일, param2는 �
 }
 const insertVisit = async (req, res) => {
     try {
-        const {pathname} = req.body;
+        const { pathname } = req.body;
         const decode = checkLevel(req.cookies.token, 0);
         let requestIp;
         try {
@@ -1953,24 +1971,24 @@ const getUserStatistics = async (req, res) => {
         visits = visits?.result;
         let visit_obj = {};
         console.log(visits);
-        for(var i =0;i<visits.length;i++){
-            if(!visit_obj[visits[i]?.date]){
+        for (var i = 0; i < visits.length; i++) {
+            if (!visit_obj[visits[i]?.date]) {
                 visit_obj[visits[i]?.date] = {
-                    views:0,
-                    visit:[]
+                    views: 0,
+                    visit: []
                 }
             }
-            if(visits[i].pathname && (visits[i].pathname.includes('/post/') || visits[i].pathname.includes('/video/'))){
-                visit_obj[visits[i]?.date].views++; 
+            if (visits[i].pathname && (visits[i].pathname.includes('/post/') || visits[i].pathname.includes('/video/'))) {
+                visit_obj[visits[i]?.date].views++;
             }
-            if(!visit_obj[visits[i]?.date]?.visit.includes(visits[i].ip)){
+            if (!visit_obj[visits[i]?.date]?.visit.includes(visits[i].ip)) {
                 visit_obj[visits[i]?.date]?.visit.push(visits[i].ip)
             }
         }
-        for(var i = 0;i<result_list.length;i++){
+        for (var i = 0; i < result_list.length; i++) {
             let keys = Object.keys(visit_obj);
-            for(var j =0;j<keys.length;j++){
-                if(keys[j].includes(result_list[i].date)){
+            for (var j = 0; j < keys.length; j++) {
+                if (keys[j].includes(result_list[i].date)) {
                     result_list[i].views_count += visit_obj[keys[j]].views;
                     result_list[i].visit_count += visit_obj[keys[j]].visit.length;
                 }
@@ -2519,7 +2537,7 @@ const setCountNotReadNoti = async (req, res) => {
     }
 }
 module.exports = {
-    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns,//auth
+    onLoginById, getUserToken, onLogout, checkExistId, checkExistNickname, sendSms, kakaoCallBack, editMyInfo, uploadProfile, onLoginBySns, addImageItems,//auth
     getUsers, getOneWord, getOneEvent, getItems, getItem, getHomeContent, getSetting, getVideoContent, getChannelList, getVideo, onSearchAllItem, findIdByPhone, findAuthByIdAndPhone, getComments, getCommentsManager, getCountNotReadNoti, getNoticeAndAlarmLastPk, getAllPosts, getUserStatistics, itemCount,//select
     addMaster, onSignUp, addOneWord, addOneEvent, addItem, addIssueCategory, addNoteImage, addVideo, addSetting, addChannel, addFeatureCategory, addNotice, addComment, addAlarm, addPopup,//insert 
     updateUser, updateItem, updateIssueCategory, updateVideo, updateMaster, updateSetting, updateStatus, updateChannel, updateFeatureCategory, updateNotice, onTheTopItem, changeItemSequence, changePassword, updateComment, updateAlarm, updatePopup,//update
