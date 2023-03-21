@@ -1378,7 +1378,7 @@ const addItem = async (req, res) => {
         let result = await insertQuery(`INSERT INTO ${table}_table ${columns} VALUES ${values}`, zColumn);
         let result2 = await insertQuery(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.result?.insertId, result?.result?.insertId]);
         if (want_push == 1) {
-            sendAlarm(`${getKoreaByEng(table) + title}`, hash, "notice", result?.result?.insertId, `/post/${table}/${result?.result?.insertId}`);
+            sendAlarm(`${getKoreaByEng(table) + title}`, hash, "notice", result?.result?.insertId, `https://weare-first.com/post/${table}/${result?.result?.insertId}`);
             await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) + title, note, table, result?.result?.insertId, `/post/${table}/${result?.result?.insertId}`])
 
         }
@@ -1696,7 +1696,7 @@ const addVideo = (req, res) => {
                     })
                 } else {
                     if (want_push == 1) {
-                        sendAlarm(`${title}`, "", "video", result.insertId, `/video/${result.insertId}`);
+                        sendAlarm(`${title}`, "", "video", result.insertId, `https://weare-first.com/video/${result.insertId}`);
                         await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("video") + title, "", "video", result.insertId, `/video/${result.insertId}`])
 
                     }
@@ -1773,7 +1773,7 @@ const addNotice = (req, res) => {
                     }
                     else {
                         if (want_push == 1) {
-                            sendAlarm(`${title}`, "", "notice", result.insertId, `/post/notice/${result.insertId}`);
+                            sendAlarm(`${title}`, "", "notice", result.insertId, `https://weare-first.com/post/notice/${result.insertId}`);
                             await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng("notice") + title, "", "notice", result.insertId, `/post/notice/${result.insertId}`])
 
                         }
