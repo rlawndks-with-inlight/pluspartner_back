@@ -11,8 +11,12 @@ const fcmServerKey = "AAAA35TttWk:APA91bGLGZjdD2fgaPRh8eYyu9CDSndD97ZdO4MBypbpIC
 firebase.initializeApp({
     credential: firebase.credential.cert(serviceAccount)
 });
-const sendAlarm = (title, note, table, pk, url) => {
-    let fcm = new fcmNode(fcmServerKey)
+const sendAlarm = (title, note, table, pk, url_, content) => {
+    let fcm = new fcmNode(fcmServerKey);
+    let url = url_;
+    if(!url.includes('http')){
+        url = 'https://weare-first.com'
+    }
     let message = {
         to: '/topics/' + 'weare',
         "click_action": "FLUTTER_NOTIFICATION_CLICK",
