@@ -1116,7 +1116,6 @@ const addComment = async (req, res) => {
             return response(req, res, -150, "권한이 없습니다.", [])
         } else {
             auth = decode;
-
         }
         let { pk, parentPk, title, note, category } = req.body;
         let userPk = auth.pk;
@@ -1142,22 +1141,23 @@ const addComment = async (req, res) => {
         your_comments = your_comments?.result;
         let message = "success"
         let result_code = 200;
-        if (your_comments.length >= 3) {//도배로 판단되어 1일간 댓글 작성 금지 response 발송
+        if (your_comments.length >= 10) {//도배로 판단되어 1일간 댓글 작성 금지 response 발송
             let last_comment_time = your_comments[0]?.date;
-            let first_comment_time = your_comments[2]?.date;
+            let first_comment_time = your_comments[9]?.date;
             last_comment_time = new Date(last_comment_time).getTime();
             first_comment_time = new Date(first_comment_time).getTime();
-            if (last_comment_time - first_comment_time < 10 * 60 * 1000
-                && decode?.user_level <= 0
+            if (last_comment_time - first_comment_time < 3 * 60 * 1000
+               && decode?.user_level <= 0
             ) {
-                message = `10분내 댓글 3회 이상 작성\n도배 의심되어 1일간 댓글 작성 금지됩니다.\n마지막 댓글시간: ${your_comments[0]?.date}`;
+                let possible_time = returnMoment(last_comment_time + 24 * 60 * 60 * 1000);
+                message = `3분내 댓글 10회 이상 작성\n도배 의심되어 1일간 댓글 작성 금지됩니다.\n잠금 해제 시간 ${possible_time}`;
                 result_code = 150;
             }
         }
-        if (your_comments.length >= 4) {//도배 댓글 차단
+        if (your_comments.length >= 11) {//도배 댓글 차단
             let now_comment_time = your_comments[0]?.date;
             let last_comment_time = your_comments[1]?.date;//금지받게된 댓글
-            let first_comment_time = your_comments[3]?.date;
+            let first_comment_time = your_comments[10]?.date;
             now_comment_time = new Date(now_comment_time).getTime();
             last_comment_time = new Date(last_comment_time).getTime();
             first_comment_time = new Date(first_comment_time).getTime();
@@ -1165,8 +1165,9 @@ const addComment = async (req, res) => {
                 && decode?.user_level <= 0
                 && now_comment_time - last_comment_time <= 24 * 60 * 60 * 1000
             ) {
+                let possible_time = returnMoment(last_comment_time + 24 * 60 * 60 * 1000);
                 await db.rollback();
-                return response(req, res, -100, `도배로 인해 댓글 작성 1일간 금지되었습니다.\n마지막 댓글시간: ${your_comments[0]?.date}`, []);
+                return response(req, res, -100, `도배로 인해 댓글 작성 1일간 금지되었습니다.\n잠금 해제 시간: ${possible_time}`, []);
             }
         }
         await db.commit();
