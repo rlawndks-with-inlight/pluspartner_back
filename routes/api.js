@@ -1379,7 +1379,7 @@ const addItem = async (req, res) => {
         let result2 = await insertQuery(`UPDATE ${table}_table SET sort=? WHERE pk=?`, [result?.result?.insertId, result?.result?.insertId]);
         if (want_push == 1) {
             sendAlarm(`${getKoreaByEng(table) + title}`, hash, "notice", result?.result?.insertId, `https://weare-first.com/post/${table}/${result?.result?.insertId}`);
-            await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) + title, note, table, result?.result?.insertId, `https://weare-first.com/post/${table}/${result?.result?.insertId}`])
+            await insertQuery("INSERT INTO alarm_log_table (title, note, item_table, item_pk, url) VALUES (?, ?, ?, ?, ?)", [getKoreaByEng(table) + title, hash, table, result?.result?.insertId, `https://weare-first.com/post/${table}/${result?.result?.insertId}`])
 
         }
         db.commit();
