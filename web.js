@@ -290,3 +290,7 @@ app.get('/api/getvideocontent', (req, res) => {
 app.get('/', (req, res) => {
         res.json({ message: `daogo Server is running on port ${req.secure ? HTTPS_PORT : HTTP_PORT}` });
 });
+
+module.exports = {
+        is_test
+}

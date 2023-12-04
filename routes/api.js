@@ -1,4 +1,5 @@
 const express = require('express')
+require('dotenv');
 //const { json } = require('body-parser')
 const router = express.Router()
 const cors = require('cors')
@@ -314,7 +315,7 @@ const onLoginByPhone = (req, res) => {
 }
 const uploadProfile = (req, res) => {
     try {
-        const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        const image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
         const id = req.body.id;
         db.query('UPDATE user_table SET profile_img=? WHERE id=?', [image, id], (err, result) => {
             if (err) {
@@ -764,8 +765,8 @@ const addMaster = (req, res) => {
         const name = req.body.name ?? "";
         const nickname = req.body.nickname ?? "";
         const user_level = req.body.user_level ?? 30;
-        const masterImg = '/image/' + req.files.master[0].fieldname + '/' + req.files.master[0].filename;
-        const channelImg = '/image/' + req.files.channel[0].fieldname + '/' + req.files.channel[0].filename;
+        const masterImg = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files.master[0].fieldname + '/' + req.files.master[0].filename;
+        const channelImg = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files.channel[0].fieldname + '/' + req.files.channel[0].filename;
         //중복 체크 
         let sql = "SELECT * FROM user_table WHERE id=?"
 
@@ -838,12 +839,12 @@ const updateMaster = (req, res) => {
                             zColumn.push(hash);
                         }
                         if (req.files.master) {
-                            masterImg = '/image/' + req.files.master[0].fieldname + '/' + req.files.master[0].filename;
+                            masterImg = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files.master[0].fieldname + '/' + req.files.master[0].filename;
                             columns += ", profile_img=?"
                             zColumn.push(masterImg);
                         }
                         if (req.files.channel) {
-                            channelImg = '/image/' + req.files.channel[0].fieldname + '/' + req.files.channel[0].filename;
+                            channelImg = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files.channel[0].fieldname + '/' + req.files.channel[0].filename;
                             columns += ", channel_img=?"
                             zColumn.push(channelImg);
                         }
@@ -879,7 +880,7 @@ const addChannel = (req, res) => {
         const name = req.body.name ?? "";
         const nickname = req.body.nickname ?? "";
         const user_level = req.body.user_level ?? 25;
-        let image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        let image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
         let sql = "SELECT * FROM user_table WHERE id=?"
 
         db.query(sql, [id], (err, result) => {
@@ -931,7 +932,7 @@ const updateChannel = (req, res) => {
         let columns = " nickname=? ";
         let zColumn = [nickname];
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
             columns += ", channel_img=? ";
             zColumn.push(image);
         }
@@ -1224,7 +1225,7 @@ const addOneWord = (req, res) => {
         let values = "(?, ?, ?, ?, ?";
         let image = "";
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
         } else {
             image = req.body.url ?? "";
         }
@@ -1265,7 +1266,7 @@ const addOneEvent = (req, res) => {
         let values = "(?, ?, ?, ?, ?";
         let image = "";
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
         } else {
             image = req.body.url ?? "";
         }
@@ -1361,13 +1362,13 @@ const addItem = async (req, res) => {
         let content_image = "";
         let content2_image = "";
         if (req.files.content) {
-            content_image = '/image/' + req.files.content[0].fieldname + '/' + req.files.content[0].filename;
+            content_image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files.content[0].fieldname + '/' + req.files.content[0].filename;
             zColumn.push(content_image);
             columns += ', main_img';
             values += ', ?';
         }
         if (req.files.content2) {
-            content2_image = '/image/' + req.files.content2[0].fieldname + '/' + req.files.content2[0].filename;
+            content2_image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files.content2[0].fieldname + '/' + req.files.content2[0].filename;
             zColumn.push(content2_image);
             columns += ', second_img';
             values += ', ?';
@@ -1404,12 +1405,12 @@ const updateItem = (req, res) => {
         let content_image = "";
         let content2_image = "";
         if (req.files.content) {
-            content_image = '/image/' + req.files.content[0].fieldname + '/' + req.files.content[0].filename;
+            content_image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files.content[0].fieldname + '/' + req.files.content[0].filename;
             zColumn.push(content_image);
             columns += ', main_img=?';
         }
         if (req.files.content2) {
-            content2_image = '/image/' + req.files.content2[0].fieldname + '/' + req.files.content2[0].filename;
+            content2_image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files.content2[0].fieldname + '/' + req.files.content2[0].filename;
             zColumn.push(content2_image);
             columns += ', second_img=?';
         }
@@ -1435,7 +1436,7 @@ const addImageItems = (req, res) => {
         for (var i = 0; i < files_keys.length; i++) {
             result.push({
                 key: files_keys[i],
-                filename: '/image/' + req.files[files_keys[i]][0].fieldname + '/' + req.files[files_keys[i]][0].filename
+                filename: (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.files[files_keys[i]][0].fieldname + '/' + req.files[files_keys[i]][0].filename
             })
         }
         return response(req, res, 100, "success", result);
@@ -1454,7 +1455,7 @@ const addIssueCategory = (req, res) => {
         const { title, sub_title } = req.body;
         let image = "";
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
         }
         db.query("INSERT INTO issue_category_table (title,sub_title,main_img) VALUES (?,?,?)", [title, sub_title, image], async (err, result) => {
             if (err) {
@@ -1485,7 +1486,7 @@ const updateIssueCategory = (req, res) => {
 
         let image = "";
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
             zColumn.push(image);
             columns += ', main_img=? '
         }
@@ -1512,7 +1513,7 @@ const addFeatureCategory = (req, res) => {
         const { title, sub_title } = req.body;
         let image = "";
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
         }
         db.query("INSERT INTO feature_category_table (title,sub_title,main_img) VALUES (?,?,?)", [title, sub_title, image], async (err, result) => {
             if (err) {
@@ -1543,7 +1544,7 @@ const updateFeatureCategory = (req, res) => {
 
         let image = "";
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
             zColumn.push(image);
             columns += ', main_img=? '
         }
@@ -1570,7 +1571,7 @@ const addPopup = (req, res) => {
         const { link } = req.body;
         let image = "";
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
         }
         db.query("INSERT INTO popup_table (link,img_src) VALUES (?,?)", [link, image], async (err, result) => {
             if (err) {
@@ -1600,7 +1601,7 @@ const updatePopup = (req, res) => {
         let columns = " link=?";
         let image = "";
         if (req.file) {
-            image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+            image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
             zColumn.push(image);
             columns += ', main_img=? '
         }
@@ -2419,7 +2420,7 @@ const addSetting = (req, res) => {
         if (!decode) {
             return response(req, res, -150, "권한이 없습니다.", [])
         }
-        const image = '/image/' + req.file.fieldname + '/' + req.file.filename;
+        const image = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req.file.fieldname + '/' + req.file.filename;
         db.query("INSERT INTO setting_table (main_img) VALUES (?)", [image], (err, result) => {
             if (err) {
                 console.log(err)
@@ -2449,12 +2450,12 @@ const updateSetting = (req, res) => {
         values.push(file2_link);
         values.push(banner_2_status);
         if (req.files?.content) {
-            image1 = '/image/' + req?.files?.content[0]?.fieldname + '/' + req?.files?.content[0]?.filename;
+            image1 = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req?.files?.content[0]?.fieldname + '/' + req?.files?.content[0]?.filename;
             sql += " main_img=?,";
             values.push(image1);
         }
         if (req.files?.content2) {
-            image2 = '/image/' + req?.files?.content2[0]?.fieldname + '/' + req?.files?.content2[0]?.filename;
+            image2 = (process.env.NODE_ENV == 'development' ? process.env.BACK_URL_TEST : process.env.BACK_URL) + '/image/' + req?.files?.content2[0]?.fieldname + '/' + req?.files?.content2[0]?.filename;
             sql += " banner_2_img=?,";
             values.push(image2);
         }
