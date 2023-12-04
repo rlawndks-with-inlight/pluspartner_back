@@ -74,7 +74,7 @@ let overFiveTime = new Date(returnMoment());
 overFiveTime.setMinutes(overFiveTime.getMinutes() + 5)
 overFiveTime = overFiveTime.getTime();
 
-const scheduleAlarm = () => {
+const scheduleFunc = () => {
         schedule.scheduleJob('0 0/1 * * * *', async function () {
                 let date = returnMoment().substring(0, 10);
                 let date_time = returnMoment();
@@ -101,6 +101,19 @@ const scheduleAlarm = () => {
                 }
         })
 }
+const setVisitTable = async () => {
+        try {
+                await db.beginTransaction();
+
+
+                await db.commit();
+        } catch (err) {
+                await db.rollback();
+                console.log(err);
+        }
+
+}
+setVisitTable();
 let server = undefined
 if (is_test) {
         server = http.createServer(app).listen(HTTP_PORT, function () {
@@ -109,13 +122,13 @@ if (is_test) {
 
 } else {
         const options = { // letsencrypt로 받은 인증서 경로를 입력해 줍니다.
-                ca: fs.readFileSync("/etc/letsencrypt/live/purplevery6.cafe24.com/fullchain.pem"),
-                key: fs.readFileSync("/etc/letsencrypt/live/purplevery6.cafe24.com/privkey.pem"),
-                cert: fs.readFileSync("/etc/letsencrypt/live/purplevery6.cafe24.com/cert.pem")
+                ca: fs.readFileSync("/etc/letsencrypt/live/purplevery30.cafe24.com/fullchain.pem"),
+                key: fs.readFileSync("/etc/letsencrypt/live/purplevery30.cafe24.com/privkey.pem"),
+                cert: fs.readFileSync("/etc/letsencrypt/live/purplevery30.cafe24.com/cert.pem")
         };
         server = https.createServer(options, app).listen(HTTPS_PORT, function () {
                 console.log("Server on " + HTTPS_PORT);
-                scheduleAlarm();
+                scheduleFunc();
         });
 
 }

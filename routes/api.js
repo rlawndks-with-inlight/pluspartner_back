@@ -1147,7 +1147,7 @@ const addComment = async (req, res) => {
             last_comment_time = new Date(last_comment_time).getTime();
             first_comment_time = new Date(first_comment_time).getTime();
             if (last_comment_time - first_comment_time < 3 * 60 * 1000
-               && decode?.user_level <= 0
+                && decode?.user_level <= 0
             ) {
                 let possible_time = returnMoment(last_comment_time + 24 * 60 * 60 * 1000);
                 message = `3분내 댓글 10회 이상 작성\n도배 의심되어 1일간 댓글 작성 금지됩니다.\n잠금 해제 시간 ${possible_time}`;
@@ -2051,29 +2051,36 @@ const getUserStatistics = async (req, res) => {
                 views_count: 0
             })
         }
-        let visits = await dbQueryList(`SELECT *, DATE_FORMAT(date, '%Y-%m-%d') AS date FROM visit_table ${subStr}`);
+        let visits = await dbQueryList(`SELECT visit_count, visit_date FROM v_visit ${subStr.replaceAll('date', 'visit_date')}`);
         visits = visits?.result;
+        let views = await dbQueryList(`SELECT view_count, view_date FROM v_view ${subStr.replaceAll('date', 'view_date')}`);
+        views = views?.result;
+
         let visit_obj = {};
         for (var i = 0; i < visits.length; i++) {
-            if (!visit_obj[visits[i]?.date]) {
-                visit_obj[visits[i]?.date] = {
+            if (!visit_obj[visits[i]?.visit_date]) {
+                visit_obj[visits[i]?.visit_date] = {
                     views: 0,
-                    visit: []
+                    visits: 0
                 }
             }
-            if (visits[i].pathname && (visits[i].pathname.includes('/post/') || visits[i].pathname.includes('/video/'))) {
-                visit_obj[visits[i]?.date].views++;
+            visit_obj[visits[i]?.visit_date].visits = visits[i]?.visit_count;
+        }
+        for (var i = 0; i < views.length; i++) {
+            if (!visit_obj[views[i]?.view_date]) {
+                visit_obj[views[i]?.view_date] = {
+                    views: 0,
+                    visits: 0
+                }
             }
-            if (!visit_obj[visits[i]?.date]?.visit.includes(visits[i].ip)) {
-                visit_obj[visits[i]?.date]?.visit.push(visits[i].ip)
-            }
+            visit_obj[views[i]?.view_date].views = views[i]?.view_count;
         }
         for (var i = 0; i < result_list.length; i++) {
             let keys = Object.keys(visit_obj);
             for (var j = 0; j < keys.length; j++) {
                 if (keys[j].includes(result_list[i].date)) {
                     result_list[i].views_count += visit_obj[keys[j]].views;
-                    result_list[i].visit_count += visit_obj[keys[j]].visit.length;
+                    result_list[i].visit_count += visit_obj[keys[j]].visits;
                 }
             }
         }
@@ -2106,7 +2113,6 @@ const getUserStatistics = async (req, res) => {
         }
         let maxPage = makeMaxPage(result_list.length, page_cut);
         let result_obj = {};
-        let visit_table
         if (page) {
             result_list = result_list.slice((page - 1) * page_cut, (page) * page_cut);
             result_obj = { data: result_list, maxPage: maxPage };
